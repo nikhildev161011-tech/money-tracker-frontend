@@ -36,7 +36,7 @@ function App() {
 
   // Handle Login and Registration API integration
   const handleAuth = async (formData, isLogin) => {
-    const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
+    const endpoint = isLogin ? 'https://money-tracker-backend-0bhm.onrender.com/' : 'https://money-tracker-backend-0bhm.onrender.com/';
 
     try {
       const response = await fetch(endpoint, {
