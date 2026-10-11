@@ -9,6 +9,7 @@ export default function Login({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [customAlert, setCustomAlert] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -40,7 +41,7 @@ export default function Login({ onLogin }) {
         setInstallPrompt(null);
       }
     } else {
-      alert("App installation shortcut: Tap your browser's menu (three dots) at the top right and select 'Install app' or 'Add to Home screen'.");
+      setCustomAlert("To install the app, tap your browser's menu (three dots) at the top right and select 'Install app' or 'Add to Home screen'.");
     }
   };
 
@@ -85,6 +86,58 @@ export default function Login({ onLogin }) {
       overflowX: 'hidden'
     }}>
       
+      {/* Custom In-App Alert Modal */}
+      {customAlert && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '320px',
+            backgroundColor: '#111115',
+            border: '1px solid #27272a',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            textAlign: 'center',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
+            color: '#ffffff'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#3b82f6' }}>
+              Money Tracker
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+              {customAlert}
+            </p>
+            <button 
+              onClick={() => setCustomAlert(null)}
+              style={{
+                width: '100%',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                fontWeight: '600',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Styles for animations, custom inputs and checkbox */}
       <style>{`
         @keyframes floatWallet {
@@ -120,7 +173,7 @@ export default function Login({ onLogin }) {
           border-color: #2563eb;
           outline: none;
           background-color: #111115;
-          box-shadow: none;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
         .custom-input::placeholder {
@@ -149,15 +202,17 @@ export default function Login({ onLogin }) {
           height: 1.25rem;
           width: 1.25rem;
           background-color: #0c0c0e;
-          border: 1.5px solid #52525b;
+          border: 2px solid #3b82f6;
           border-radius: 0.35rem;
           transition: all 0.2s ease;
           flex-shrink: 0;
           margin-top: 0.1rem;
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
         }
 
         .checkbox-container:hover input ~ .checkmark {
-          border-color: #3b82f6;
+          border-color: #60a5fa;
+          box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
         }
 
         .checkbox-container input:checked ~ .checkmark {
@@ -184,11 +239,6 @@ export default function Login({ onLogin }) {
           border: solid white;
           border-width: 0 2px 2px 0;
           transform: rotate(45deg);
-        }
-
-        button:focus, .custom-input:focus {
-          outline: none !important;
-          box-shadow: none !important;
         }
       `}</style>
 
@@ -385,7 +435,7 @@ export default function Login({ onLogin }) {
             </>
           )}
 
-          {/* Checkbox for Terms and Conditions */}
+          {/* Professional Animated Checkbox for Terms and Conditions */}
           <div style={{ marginTop: '0.25rem' }}>
             <label className="checkbox-container">
               <input 
@@ -415,6 +465,8 @@ export default function Login({ onLogin }) {
               cursor: agreed ? 'pointer' : 'not-allowed',
               fontSize: '0.95rem',
               marginTop: '0.5rem',
+              transition: 'all 0.2s ease',
+              boxShadow: agreed ? '0 4px 14px rgba(37, 99, 235, 0.35)' : 'none'
             }}
           >
             {isLogin ? "Sign In" : "Create Account"}
@@ -442,7 +494,7 @@ export default function Login({ onLogin }) {
           </button>
         </div>
 
-        {/* Direct PWA Install Button */}
+        {/* Direct Download App Button */}
         <button 
           type="button"
           onClick={handleInstallClick}
@@ -454,7 +506,7 @@ export default function Login({ onLogin }) {
             width: '100%',
             maxWidth: '280px',
             backgroundColor: '#0c0c0e',
-            border: '1px solid #222226',
+            border: '1px solid #2563eb',
             color: '#ffffff',
             padding: '0.75rem 1rem',
             borderRadius: '0.85rem',
@@ -463,6 +515,9 @@ export default function Login({ onLogin }) {
             cursor: 'pointer',
             marginTop: '1.75rem',
             marginBottom: '0.75rem',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+            boxSizing: 'border-box'
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,15 +528,15 @@ export default function Login({ onLogin }) {
           <span>Download Money Tracker App</span>
         </button>
 
-        {/* Developer signature in Cursive style */}
+        {/* Developer signature */}
         <div style={{ 
           marginTop: '0.5rem', 
-          fontSize: '0.85rem', 
+          fontSize: '0.8rem', 
           color: '#9ca3af',
-          letterSpacing: '0.03em',
-          fontWeight: '400'
+          letterSpacing: '0.05em',
+          fontWeight: '500'
         }}>
-          Designed & Developed by <span style={{ color: '#3b82f6', fontWeight: '600', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Nikhil Gupta</span>
+          Designed & Developed by <span style={{ color: '#3b82f6', fontWeight: '600' }}>Nikhil Gupta</span>
         </div>
 
       </div>
