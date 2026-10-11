@@ -27,52 +27,34 @@ function App() {
   }, []);
 
   const handleAuth = async (formData, isLogin) => {
-    const endpoints = [
-      'https://money-tracker-backend-0bhm.onrender.com/api/login',
-      'https://money-tracker-backend-0bhm.onrender.com/login',
-      'https://money-tracker-backend-0bhm.onrender.com/'
-    ];
+    const endpoint = isLogin 
+      ? 'https://money-tracker-backend-0bhm.onrender.com/api/auth/login' 
+      : 'https://money-tracker-backend-0bhm.onrender.com/api/auth/register';
 
-    let success = false;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    for (let endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
+      const result = await response.json();
 
-        const textResponse = await response.text();
-
-        if (textResponse.trim().startsWith('<')) {
-          continue;
-        }
-
-        const result = JSON.parse(textResponse);
-        if (result.success) {
-          const userData = {
-            id: result.user.id,
-            name: result.user.name,
-            email: result.user.email
-          };
-          setUser(userData);
-          localStorage.setItem('moneyTrackerUser', JSON.stringify(userData));
-          success = true;
-          break;
-        } else {
-          alert(result.message || "Authentication failed.");
-          success = true;
-          break;
-        }
-      } catch (err) {
-        // Skip and try next endpoint
+      if (result.success) {
+        const userData = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email
+        };
+        setUser(userData);
+        localStorage.setItem('moneyTrackerUser', JSON.stringify(userData));
+      } else {
+        alert(result.message || "Authentication failed. Please check your credentials.");
       }
-    }
-
-    if (!success) {
+    } catch (error) {
+      console.error("Authentication Error:", error);
       alert("Unable to connect to the backend server. Please ensure the server is running.");
     }
   };
