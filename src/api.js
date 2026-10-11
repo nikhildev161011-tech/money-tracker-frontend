@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production'
+const API_BASE_URL = import.meta.env.PROD
   ? 'https://money-tracker-backend-8bhm.onrender.com'
   : 'http://localhost:5000';
 
