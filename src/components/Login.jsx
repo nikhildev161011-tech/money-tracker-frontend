@@ -70,15 +70,6 @@ export default function Login({ onLogin }) {
           animation: floatWallet 3s ease-in-out infinite;
         }
 
-        @keyframes softGlow {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; text-shadow: 0 0 10px rgba(37, 99, 235, 0.5); }
-          100% { opacity: 0.6; }
-        }
-        .developer-badge {
-          animation: softGlow 3s ease-in-out infinite;
-        }
-
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus {
@@ -129,18 +120,20 @@ export default function Login({ onLogin }) {
 
         .checkmark {
           position: relative;
-          height: 1.2rem;
-          width: 1.2rem;
+          height: 1.25rem;
+          width: 1.25rem;
           background-color: #0c0c0e;
-          border: 1px solid #222226;
+          border: 2px solid #3b82f6;
           border-radius: 0.35rem;
           transition: all 0.2s ease;
           flex-shrink: 0;
           margin-top: 0.1rem;
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
         }
 
         .checkbox-container:hover input ~ .checkmark {
-          border-color: #3b82f6;
+          border-color: #60a5fa;
+          box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
         }
 
         .checkbox-container input:checked ~ .checkmark {
@@ -327,14 +320,24 @@ export default function Login({ onLogin }) {
             <>
               <div>
                 <label style={{ fontSize: '0.8rem', color: '#9ca3af', display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Question (For Password Recovery)</label>
-                <input 
-                  type="text" 
-                  name="securityQuestion" 
-                  value="What is your favourite month" 
-                  disabled
-                  className="custom-input"
-                  style={{ backgroundColor: '#070709', color: '#71717a', cursor: 'not-allowed', paddingLeft: '1rem', paddingRight: '1rem' }}
-                />
+                <div style={{
+                  width: '100%',
+                  backgroundColor: '#0c0c0e',
+                  border: '1px solid #222226',
+                  borderRadius: '0.85rem',
+                  padding: '0.85rem 1rem',
+                  color: '#d4d4d8',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxSizing: 'border-box'
+                }}>
+                  <span style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  </span>
+                  <span>What is your favourite month?</span>
+                </div>
               </div>
 
               <div>
@@ -342,7 +345,7 @@ export default function Login({ onLogin }) {
                 <input 
                   type="text" 
                   name="securityAnswer" 
-                  placeholder="e.g., Enter your favourite " 
+                  placeholder="e.g., Enter your favourite month" 
                   value={formData.securityAnswer}
                   onChange={handleChange}
                   required={!isLogin}
@@ -412,9 +415,43 @@ export default function Login({ onLogin }) {
           </button>
         </div>
 
+        {/* Direct Download App Button */}
+        <a 
+          href="/money-tracker.apk" 
+          download 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.6rem',
+            width: '100%',
+            maxWidth: '280px',
+            backgroundColor: '#0c0c0e',
+            border: '1px solid #2563eb',
+            color: '#ffffff',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.85rem',
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            textDecoration: 'none',
+            marginTop: '1.75rem',
+            marginBottom: '0.75rem',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+            boxSizing: 'border-box'
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download Money Tracker App</span>
+        </a>
+
         {/* Developer signature */}
-        <div className="developer-badge" style={{ 
-          marginTop: '2rem', 
+        <div style={{ 
+          marginTop: '0.5rem', 
           fontSize: '0.8rem', 
           color: '#9ca3af',
           letterSpacing: '0.05em',
