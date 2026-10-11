@@ -47,7 +47,7 @@ export default function Dashboard({ user, onLogout }) {
 
   const fetchTransactions = async () => {
     try {
-      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com//transactions/${user.id}`);
+      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com/api/transactions/${user.id}`);
       const result = await response.json();
       if (result.success) {
         setTransactions(result.data);
@@ -67,7 +67,7 @@ export default function Dashboard({ user, onLogout }) {
     }
 
     try {
-      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com//api/transactions/add', {
+      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com/api/transactions/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -598,7 +598,6 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
-
   if (showEditCollectionPage) {
     return (
       <div style={{
@@ -996,8 +995,7 @@ export default function Dashboard({ user, onLogout }) {
                 <button
                   key={item}
                   onClick={() => setTimeFilter(item)}
-                  style={{
-                    backgroundColor: timeFilter === item ? '#1f2937' : 'transparent',
+                  style={{backgroundColor: timeFilter === item ? '#1f2937' : 'transparent',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '0.75rem',
