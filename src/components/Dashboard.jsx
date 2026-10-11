@@ -47,7 +47,7 @@ export default function Dashboard({ user, onLogout }) {
 
   const fetchTransactions = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/transactions/${user.id}`);
+      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com//transactions/${user.id}`);
       const result = await response.json();
       if (result.success) {
         setTransactions(result.data);
@@ -67,7 +67,7 @@ export default function Dashboard({ user, onLogout }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/transactions/add', {
+      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com//api/transactions/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
