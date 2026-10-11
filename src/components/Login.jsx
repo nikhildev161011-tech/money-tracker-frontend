@@ -1,7 +1,7 @@
 // Component: Login
 // Description: Clean authentication screen with onboarding introduction step and login/signup flow.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
 
 export default function Login({ onLogin }) {
@@ -17,6 +17,32 @@ export default function Login({ onLogin }) {
     securityAnswer: ''
   });
   const [agreed, setAgreed] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setInstallPrompt(null);
+      }
+    } else {
+      alert("App is already installed or your browser doesn't support direct installation. You can use the browser menu to install.");
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -94,7 +120,7 @@ export default function Login({ onLogin }) {
           border-color: #2563eb;
           outline: none;
           background-color: #111115;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+          box-shadow: none;
         }
 
         .custom-input::placeholder {
@@ -123,17 +149,15 @@ export default function Login({ onLogin }) {
           height: 1.25rem;
           width: 1.25rem;
           background-color: #0c0c0e;
-          border: 2px solid #3b82f6;
+          border: 1.5px solid #52525b;
           border-radius: 0.35rem;
           transition: all 0.2s ease;
           flex-shrink: 0;
           margin-top: 0.1rem;
-          box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
         }
 
         .checkbox-container:hover input ~ .checkmark {
-          border-color: #60a5fa;
-          box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+          border-color: #3b82f6;
         }
 
         .checkbox-container input:checked ~ .checkmark {
@@ -160,6 +184,11 @@ export default function Login({ onLogin }) {
           border: solid white;
           border-width: 0 2px 2px 0;
           transform: rotate(45deg);
+        }
+
+        button:focus, .custom-input:focus {
+          outline: none !important;
+          box-shadow: none !important;
         }
       `}</style>
 
@@ -356,7 +385,7 @@ export default function Login({ onLogin }) {
             </>
           )}
 
-          {/* Professional Animated Checkbox for Terms and Conditions */}
+          {/* Checkbox for Terms and Conditions */}
           <div style={{ marginTop: '0.25rem' }}>
             <label className="checkbox-container">
               <input 
@@ -387,7 +416,7 @@ export default function Login({ onLogin }) {
               fontSize: '0.95rem',
               marginTop: '0.5rem',
               transition: 'all 0.2s ease',
-              boxShadow: agreed ? '0 4px 14px rgba(37, 99, 235, 0.35)' : 'none'
+              boxShadow: 'none'
             }}
           >
             {isLogin ? "Sign In" : "Create Account"}
@@ -415,10 +444,10 @@ export default function Login({ onLogin }) {
           </button>
         </div>
 
-        {/* Direct Download App Button */}
-        <a 
-          href="/money-tracker.apk" 
-          download 
+        {/* Direct PWA Install Button */}
+        <button 
+          type="button"
+          onClick={handleInstallClick}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -427,17 +456,16 @@ export default function Login({ onLogin }) {
             width: '100%',
             maxWidth: '280px',
             backgroundColor: '#0c0c0e',
-            border: '1px solid #2563eb',
+            border: '1px solid #222226',
             color: '#ffffff',
             padding: '0.75rem 1rem',
             borderRadius: '0.85rem',
             fontSize: '0.85rem',
             fontWeight: '600',
-            textDecoration: 'none',
+            cursor: 'pointer',
             marginTop: '1.75rem',
             marginBottom: '0.75rem',
             transition: 'all 0.2s ease',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
             boxSizing: 'border-box'
           }}
         >
@@ -447,17 +475,17 @@ export default function Login({ onLogin }) {
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           <span>Download Money Tracker App</span>
-        </a>
+        </button>
 
-        {/* Developer signature */}
+        {/* Developer signature in Cursive style */}
         <div style={{ 
           marginTop: '0.5rem', 
-          fontSize: '0.8rem', 
+          fontSize: '0.85rem', 
           color: '#9ca3af',
-          letterSpacing: '0.05em',
-          fontWeight: '500'
+          letterSpacing: '0.03em',
+          fontWeight: '400'
         }}>
-          Designed & Developed by <span style={{ color: '#3b82f6', fontWeight: '600' }}>Nikhil Gupta</span>
+          Designed & Developed by <span style={{ color: '#3b82f6', fontWeight: '600', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Nikhil Gupta</span>
         </div>
 
       </div>
