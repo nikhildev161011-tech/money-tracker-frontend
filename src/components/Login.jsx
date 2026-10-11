@@ -40,7 +40,7 @@ export default function Login({ onLogin }) {
         setInstallPrompt(null);
       }
     } else {
-      alert("App is already installed or your browser doesn't support direct installation. You can use the browser menu to install.");
+      alert("App installation shortcut: Tap your browser's menu (three dots) at the top right and select 'Install app' or 'Add to Home screen'.");
     }
   };
 
@@ -415,8 +415,6 @@ export default function Login({ onLogin }) {
               cursor: agreed ? 'pointer' : 'not-allowed',
               fontSize: '0.95rem',
               marginTop: '0.5rem',
-              transition: 'all 0.2s ease',
-              boxShadow: 'none'
             }}
           >
             {isLogin ? "Sign In" : "Create Account"}
@@ -465,8 +463,6 @@ export default function Login({ onLogin }) {
             cursor: 'pointer',
             marginTop: '1.75rem',
             marginBottom: '0.75rem',
-            transition: 'all 0.2s ease',
-            boxSizing: 'border-box'
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
