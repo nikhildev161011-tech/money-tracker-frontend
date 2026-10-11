@@ -17,6 +17,8 @@ export default function Dashboard({ user, onLogout }) {
   const [showAddEntryModal, setShowAddEntryModal] = useState(false);
   const [showAddRecordPage, setShowAddRecordPage] = useState(false);
   
+  const [customAlert, setCustomAlert] = useState(null);
+  
   const [recordType, setRecordType] = useState('cashIn');
   const [recordDesc, setRecordDesc] = useState('');
   const [recordAmount, setRecordAmount] = useState('');
@@ -62,7 +64,7 @@ export default function Dashboard({ user, onLogout }) {
   // Function to handle saving a new record associated with the user to MongoDB
   const handleSaveRecord = async () => {
     if (!recordDesc.trim() || !recordAmount) {
-      alert("Please enter description and amount.");
+      setCustomAlert("Please enter description and amount.");
       return;
     }
 
@@ -83,17 +85,17 @@ export default function Dashboard({ user, onLogout }) {
 
       const result = await response.json();
       if (result.success) {
-        alert("Record added successfully!");
+        setCustomAlert("Record added successfully!");
         setRecordDesc('');
         setRecordAmount('');
         setShowAddRecordPage(false);
         fetchTransactions();
       } else {
-        alert("Failed to add record.");
+        setCustomAlert("Failed to add record.");
       }
     } catch (error) {
       console.error("Error saving record:", error);
-      alert("Error connecting to backend server.");
+      setCustomAlert("Error connecting to backend server.");
     }
   };
 
@@ -744,7 +746,7 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => {
               setOwnedCollections(prev => prev.filter(item => item.name !== editingCollectionName));
-              alert("Collection deleted successfully.");
+              setCustomAlert("Collection deleted successfully.");
               setShowEditCollectionPage(false);
             }}
             style={{
@@ -771,7 +773,7 @@ export default function Dashboard({ user, onLogout }) {
               if (editingCollectionName.trim() !== '') {
                 setOwnedCollections([{ name: editingCollectionName, color: selectedColor }]);
               }
-              alert("Changes saved successfully!");
+              setCustomAlert("Changes saved successfully!");
               setShowEditCollectionPage(false);
             }}
             style={{
@@ -995,7 +997,8 @@ export default function Dashboard({ user, onLogout }) {
                 <button
                   key={item}
                   onClick={() => setTimeFilter(item)}
-                  style={{backgroundColor: timeFilter === item ? '#1f2937' : 'transparent',
+                  style={{
+                    backgroundColor: timeFilter === item ? '#1f2937' : 'transparent',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '0.75rem',
@@ -1038,6 +1041,7 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   return (
     <div style={{
       width: '100vw',
@@ -1054,6 +1058,58 @@ export default function Dashboard({ user, onLogout }) {
       position: 'relative'
     }}>
       
+      {/* Custom In-App Alert Modal */}
+      {customAlert && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '320px',
+            backgroundColor: '#111115',
+            border: '1px solid #27272a',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            textAlign: 'center',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
+            color: '#ffffff'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#3b82f6' }}>
+              Money Tracker
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+              {customAlert}
+            </p>
+            <button 
+              onClick={() => setCustomAlert(null)}
+              style={{
+                width: '100%',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                fontWeight: '600',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes tabFade {
           from { opacity: 0; transform: translateY(6px); }
@@ -1081,7 +1137,8 @@ export default function Dashboard({ user, onLogout }) {
             backgroundColor: '#1f2937',
             overflow: 'hidden',
             border: '1px solid #374151',
-            display: 'flex',alignItems: 'center',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 'bold',
             color: '#3b82f6',
@@ -1902,7 +1959,7 @@ export default function Dashboard({ user, onLogout }) {
               backgroundColor: '#121212',
               borderTopLeftRadius: '2rem',
               borderTopRightRadius: '2rem',
-              padding: '1.5rem 1.25rem 2.5rem 1.25rem',
+              padding: '1.5rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem',
               width: '100%',
               maxWidth: '380px',
               marginInline: 'auto',
@@ -1946,7 +2003,7 @@ export default function Dashboard({ user, onLogout }) {
                 onClick={() => {
                   const confirmDelete = window.confirm("Are you sure you want to permanently delete your account and all data?");
                   if (confirmDelete) {
-                    alert("Account successfully deleted.");
+                    setCustomAlert("Account successfully deleted.");
                     onLogout();
                   }
                   setShowSettingsModal(false);
