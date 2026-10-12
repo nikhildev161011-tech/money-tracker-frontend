@@ -1,5 +1,5 @@
 // Component: Login
-// Description: Clean authentication screen with onboarding introduction step and login/signup flow.
+// Description: Clean authentication screen with theme support and direct robust PWA installation trigger.
 
 import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
@@ -10,6 +10,13 @@ export default function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [customAlert, setCustomAlert] = useState(null);
+  
+  // Theme state defaulting to Light theme, synced with localStorage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('money_tracker_theme');
+    return savedTheme ? savedTheme === 'dark' : false;
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,15 +40,24 @@ export default function Login({ onLogin }) {
     };
   }, []);
 
+  // Direct PWA installation handler without requiring browser menu clicks
   const handleInstallClick = async () => {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      setCustomAlert("Money Tracker is already installed and running as an app on your device!");
+      return;
+    }
+
     if (installPrompt) {
       installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
       if (outcome === 'accepted') {
+        setCustomAlert("App installation started successfully!");
         setInstallPrompt(null);
+      } else {
+        setCustomAlert("App installation was cancelled.");
       }
     } else {
-      setCustomAlert("To install the app, tap your browser's menu (three dots) at the top right and select 'Install app' or 'Add to Home screen'.");
+      setCustomAlert("Direct install prompt is not currently available. Please ensure you are using a supported browser or check if the app is already installed.");
     }
   };
 
@@ -66,6 +82,15 @@ export default function Login({ onLogin }) {
     onLogin(formData, isLogin);
   };
 
+  const themeColors = {
+    bg: isDarkMode ? '#000000' : '#f8fafc',
+    cardBg: isDarkMode ? '#0c0c0e' : '#ffffff',
+    textMain: isDarkMode ? '#ffffff' : '#0f172a',
+    textMuted: isDarkMode ? '#9ca3af' : '#64748b',
+    border: isDarkMode ? '#222226' : '#e2e8f0',
+    modalBg: isDarkMode ? '#111115' : '#ffffff'
+  };
+
   if (showOnboarding) {
     return <Onboarding onFinish={() => setShowOnboarding(false)} />;
   }
@@ -74,8 +99,8 @@ export default function Login({ onLogin }) {
     <div style={{
       width: '100vw',
       minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#ffffff',
+      backgroundColor: themeColors.bg,
+      color: themeColors.textMain,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -86,7 +111,7 @@ export default function Login({ onLogin }) {
       overflowX: 'hidden'
     }}>
       
-      {/* Custom In-App Alert Modal */}
+      {/* Centered Custom Popup Alert Modal */}
       {customAlert && (
         <div style={{
           position: 'fixed',
@@ -95,6 +120,7 @@ export default function Login({ onLogin }) {
           width: '100vw',
           height: '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -103,19 +129,19 @@ export default function Login({ onLogin }) {
         }}>
           <div style={{
             width: '100%',
-            maxWidth: '320px',
-            backgroundColor: '#111115',
-            border: '1px solid #27272a',
-            borderRadius: '1rem',
-            padding: '1.5rem',
+            maxWidth: '310px',
+            backgroundColor: themeColors.modalBg,
+            border: `1px solid ${themeColors.border}`,
+            borderRadius: '1.25rem',
+            padding: '1.75rem 1.25rem',
             textAlign: 'center',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
-            color: '#ffffff'
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            color: themeColors.textMain
           }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#3b82f6' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '0.4rem', color: '#3b82f6' }}>
               Money Tracker
             </h3>
-            <p style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+            <p style={{ fontSize: '0.9rem', color: themeColors.textMuted, marginBottom: '1.5rem', lineHeight: '1.4' }}>
               {customAlert}
             </p>
             <button 
@@ -125,11 +151,11 @@ export default function Login({ onLogin }) {
                 backgroundColor: '#2563eb',
                 color: '#ffffff',
                 fontWeight: '600',
-                padding: '0.75rem',
-                borderRadius: '0.75rem',
+                padding: '0.8rem',
+                borderRadius: '0.85rem',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: '0.9rem'
+                fontSize: '0.95rem'
               }}
             >
               OK
@@ -149,21 +175,13 @@ export default function Login({ onLogin }) {
           animation: floatWallet 3s ease-in-out infinite;
         }
 
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px #0c0c0e inset !important;
-          transition: background-color 5000s ease-in-out 0s;
-        }
-
         .custom-input {
           width: 100%;
-          background-color: #0c0c0e;
-          color: #ffffff;
+          background-color: ${themeColors.cardBg};
+          color: ${themeColors.textMain};
           padding: 0.85rem 2.75rem 0.85rem 2.75rem;
           border-radius: 0.85rem;
-          border: 1px solid #222226;
+          border: 1px solid ${themeColors.border};
           font-size: 0.95rem;
           box-sizing: border-box;
           transition: all 0.25s ease;
@@ -172,12 +190,11 @@ export default function Login({ onLogin }) {
         .custom-input:focus {
           border-color: #2563eb;
           outline: none;
-          background-color: #111115;
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
         .custom-input::placeholder {
-          color: #52525b;
+          color: ${themeColors.textMuted};
         }
 
         .checkbox-container {
@@ -201,24 +218,17 @@ export default function Login({ onLogin }) {
           position: relative;
           height: 1.25rem;
           width: 1.25rem;
-          background-color: #0c0c0e;
+          background-color: ${themeColors.cardBg};
           border: 2px solid #3b82f6;
           border-radius: 0.35rem;
           transition: all 0.2s ease;
           flex-shrink: 0;
           margin-top: 0.1rem;
-          box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
-        }
-
-        .checkbox-container:hover input ~ .checkmark {
-          border-color: #60a5fa;
-          box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
         }
 
         .checkbox-container input:checked ~ .checkmark {
           background-color: #2563eb;
           border-color: #2563eb;
-          transform: scale(1.05);
         }
 
         .checkmark:after {
@@ -283,7 +293,7 @@ export default function Login({ onLogin }) {
         <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.35rem', letterSpacing: '-0.025em' }}>
           Money Tracker
         </h1>
-        <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+        <p style={{ color: themeColors.textMuted, fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
           {isLogin ? "Welcome back! Please enter your details." : "Create your secure personal account."}
         </p>
 
@@ -311,9 +321,9 @@ export default function Login({ onLogin }) {
           {/* Name field (Signup only) */}
           {!isLogin && (
             <div>
-              <label style={{ fontSize: '0.8rem', color: '#9ca3af', display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Full Name</label>
+              <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Full Name</label>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '14px', top: '14px', color: '#52525b', pointerEvents: 'none' }}>
+                <span style={{ position: 'absolute', left: '14px', top: '14px', color: themeColors.textMuted, pointerEvents: 'none' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </span>
                 <input 
@@ -332,9 +342,9 @@ export default function Login({ onLogin }) {
 
           {/* Email field */}
           <div>
-            <label style={{ fontSize: '0.8rem', color: '#9ca3af', display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Email Address</label>
+            <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Email Address</label>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '14px', top: '14px', color: '#52525b', pointerEvents: 'none' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '14px', color: themeColors.textMuted, pointerEvents: 'none' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </span>
               <input 
@@ -353,11 +363,11 @@ export default function Login({ onLogin }) {
           {/* Password field with show/hide toggle */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-              <label style={{ fontSize: '0.8rem', color: '#9ca3af', fontWeight: '500' }}>Password</label>
-              <span style={{ fontSize: '0.7rem', color: '#52525b' }}>6 to 15 characters</span>
+              <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, fontWeight: '500' }}>Password</label>
+              <span style={{ fontSize: '0.7rem', color: themeColors.textMuted }}>6 to 15 characters</span>
             </div>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '14px', top: '14px', color: '#52525b', pointerEvents: 'none' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '14px', color: themeColors.textMuted, pointerEvents: 'none' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span>
               <input 
@@ -379,7 +389,7 @@ export default function Login({ onLogin }) {
                   top: '12px',
                   background: 'none',
                   border: 'none',
-                  color: '#52525b',
+                  color: themeColors.textMuted,
                   cursor: 'pointer',
                   padding: '2px'
                 }}
@@ -398,14 +408,14 @@ export default function Login({ onLogin }) {
           {!isLogin && (
             <>
               <div>
-                <label style={{ fontSize: '0.8rem', color: '#9ca3af', display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Question (For Password Recovery)</label>
+                <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Question (For Password Recovery)</label>
                 <div style={{
                   width: '100%',
-                  backgroundColor: '#0c0c0e',
-                  border: '1px solid #222226',
+                  backgroundColor: themeColors.cardBg,
+                  border: `1px solid ${themeColors.border}`,
                   borderRadius: '0.85rem',
                   padding: '0.85rem 1rem',
-                  color: '#d4d4d8',
+                  color: themeColors.textMain,
                   fontSize: '0.9rem',
                   display: 'flex',
                   alignItems: 'center',
@@ -420,7 +430,7 @@ export default function Login({ onLogin }) {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', color: '#9ca3af', display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Answer</label>
+                <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Answer</label>
                 <input 
                   type="text" 
                   name="securityAnswer" 
@@ -444,7 +454,7 @@ export default function Login({ onLogin }) {
                 onChange={(e) => setAgreed(e.target.checked)}
               />
               <span className="checkmark"></span>
-              <span style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
+              <span style={{ fontSize: '0.75rem', color: themeColors.textMuted, lineHeight: '1.4' }}>
                 By continuing, you agree to our <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Privacy Policy</a>.
               </span>
             </label>
@@ -456,8 +466,8 @@ export default function Login({ onLogin }) {
             disabled={!agreed}
             style={{
               width: '100%',
-              backgroundColor: agreed ? '#2563eb' : '#18181b',
-              color: agreed ? '#ffffff' : '#52525b',
+              backgroundColor: agreed ? '#2563eb' : (isDarkMode ? '#18181b' : '#cbd5e1'),
+              color: agreed ? '#ffffff' : themeColors.textMuted,
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '0.85rem',
@@ -475,7 +485,7 @@ export default function Login({ onLogin }) {
         </form>
 
         {/* Toggle between login and signup */}
-        <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#9ca3af' }}>
+        <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: themeColors.textMuted }}>
           {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
           <button 
             onClick={() => setIsLogin(!isLogin)}
@@ -494,7 +504,7 @@ export default function Login({ onLogin }) {
           </button>
         </div>
 
-        {/* Direct Download App Button */}
+        {/* Direct PWA Download App Button */}
         <button 
           type="button"
           onClick={handleInstallClick}
@@ -505,9 +515,9 @@ export default function Login({ onLogin }) {
             gap: '0.6rem',
             width: '100%',
             maxWidth: '280px',
-            backgroundColor: '#0c0c0e',
+            backgroundColor: themeColors.cardBg,
             border: '1px solid #2563eb',
-            color: '#ffffff',
+            color: themeColors.textMain,
             padding: '0.75rem 1rem',
             borderRadius: '0.85rem',
             fontSize: '0.85rem',
@@ -528,15 +538,15 @@ export default function Login({ onLogin }) {
           <span>Download Money Tracker App</span>
         </button>
 
-        {/* Developer signature */}
+        {/* Professional Developer signature update */}
         <div style={{ 
           marginTop: '0.5rem', 
           fontSize: '0.8rem', 
-          color: '#9ca3af',
+          color: themeColors.textMuted,
           letterSpacing: '0.05em',
           fontWeight: '500'
         }}>
-          Designed & Developed by <span style={{ color: '#3b82f6', fontWeight: '600' }}>Nikhil Gupta</span>
+          Secure Financial Vault • Engineered for Excellence
         </div>
 
       </div>
