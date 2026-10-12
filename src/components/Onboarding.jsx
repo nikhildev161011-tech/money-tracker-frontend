@@ -1,13 +1,23 @@
 /**
  * Component: Onboarding
  * Description: Renders the multi-step slider/carousel with 100% mobile responsiveness,
- *              animated icons, Skip/Next controls, and safe area padding.
+ *              animated icons, Skip/Next controls, safe area padding, and dynamic theme support.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Onboarding({ onFinish }) {
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Theme state synced with localStorage, defaulting to Light theme (false = light, true = dark)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('money_tracker_theme');
+    return savedTheme ? savedTheme === 'dark' : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('money_tracker_theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   const slides = [
     {
@@ -43,6 +53,14 @@ export default function Onboarding({ onFinish }) {
     }
   ];
 
+  const themeColors = {
+    bg: isDarkMode ? '#000000' : '#f8fafc',
+    cardBg: isDarkMode ? '#111827' : '#ffffff',
+    textMain: isDarkMode ? '#ffffff' : '#0f172a',
+    textMuted: isDarkMode ? '#9ca3af' : '#64748b',
+    border: isDarkMode ? '#1f2937' : '#e2e8f0',
+  };
+
   const handleNext = () => {
     if (currentStep < slides.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -71,8 +89,8 @@ export default function Onboarding({ onFinish }) {
     <div style={{
       width: '100vw',
       height: '100dvh',
-      backgroundColor: '#000000',
-      color: '#ffffff',
+      backgroundColor: themeColors.bg,
+      color: themeColors.textMain,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -83,10 +101,10 @@ export default function Onboarding({ onFinish }) {
       overflow: 'hidden',
       position: 'fixed',
       top: 0,
-      left: 0
+      left: 0,
+      transition: 'background-color 0.3s ease, color 0.3s ease'
     }}>
       
-      {/* CSS Animations for smooth floating icons and fade-in effect */}
       <style>{`
         @keyframes floatIcon {
           0% { transform: translateY(0px) scale(1); }
@@ -106,14 +124,34 @@ export default function Onboarding({ onFinish }) {
         }
       `}</style>
 
-      {/* Top Header: Skip Button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', maxWidth: '380px', minHeight: '32px' }}>
+      {/* Top Header: Theme Toggle and Skip Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '380px', minHeight: '38px' }}>
+        <button 
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          style={{
+            backgroundColor: themeColors.cardBg,
+            border: `1px solid ${themeColors.border}`,
+            borderRadius: '50%',
+            width: '38px',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+          }}
+          title="Toggle Theme"
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+
         <button 
           onClick={handleSkip}
           style={{
             background: 'none',
             border: 'none',
-            color: '#9ca3af',
+            color: themeColors.textMuted,
             fontSize: '0.9rem',
             fontWeight: '600',
             cursor: 'pointer',
@@ -124,7 +162,7 @@ export default function Onboarding({ onFinish }) {
         </button>
       </div>
 
-      {/* Center Content: Borderless Animated Icon & Text */}
+      {/* Center Content: Animated Icon & Text */}
       <div className="slide-container" style={{
         width: '100%',
         maxWidth: '380px',
@@ -145,10 +183,10 @@ export default function Onboarding({ onFinish }) {
           {slide.icon}
         </div>
 
-        <h2 style={{ fontSize: '1.65rem', fontWeight: '700', marginBottom: '0.5rem', letterSpacing: '-0.025em' }}>
+        <h2 style={{ fontSize: '1.65rem', fontWeight: '700', marginBottom: '0.5rem', letterSpacing: '-0.025em', color: themeColors.textMain }}>
           {slide.title}
         </h2>
-        <p style={{ color: '#9ca3af', fontSize: '0.88rem', lineHeight: '1.45', padding: '0 0.5rem', margin: 0 }}>
+        <p style={{ color: themeColors.textMuted, fontSize: '0.88rem', lineHeight: '1.45', padding: '0 0.5rem', margin: 0 }}>
           {slide.description}
         </p>
 
@@ -173,7 +211,7 @@ export default function Onboarding({ onFinish }) {
                 width: currentStep === index ? '22px' : '6px',
                 height: '6px',
                 borderRadius: '3px',
-                backgroundColor: currentStep === index ? '#10b981' : '#374151',
+                backgroundColor: currentStep === index ? '#10b981' : themeColors.border,
                 transition: 'all 0.3s ease'
               }}
             />
@@ -187,12 +225,12 @@ export default function Onboarding({ onFinish }) {
               onClick={handleBack}
               style={{
                 flex: 1,
-                backgroundColor: '#111827',
-                color: '#ffffff',
+                backgroundColor: themeColors.cardBg,
+                color: themeColors.textMain,
                 fontWeight: '600',
                 padding: '0.85rem 1rem',
                 borderRadius: '0.85rem',
-                border: '1px solid #1f2937',
+                border: `1px solid ${themeColors.border}`,
                 cursor: 'pointer',
                 fontSize: '0.95rem'
               }}
@@ -205,15 +243,15 @@ export default function Onboarding({ onFinish }) {
             onClick={handleNext}
             style={{
               flex: currentStep > 0 ? 2 : 1,
-              backgroundColor: '#ffffff',
-              color: '#000000',
+              backgroundColor: isDarkMode ? '#ffffff' : '#0f172a',
+              color: isDarkMode ? '#000000' : '#ffffff',
               fontWeight: '600',
               padding: '0.85rem 1rem',
               borderRadius: '0.85rem',
               border: 'none',
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 4px 12px rgba(255, 255, 255, 0.15)'
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
             }}
           >
             {currentStep === slides.length - 1 ? "Get Started" : "Next"}
