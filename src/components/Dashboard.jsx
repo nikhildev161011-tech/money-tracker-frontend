@@ -1,5 +1,5 @@
 /**
- * Component: Dashboard (Part 1 of 2)
+ * Component: Dashboard (Part 1 of 3)
  * Description: Complete, 100% mobile-responsive dashboard featuring Home, Insights, 
  * Collections, Compact Add Entry Modal, Add Record, Edit Collection, Theme Switcher, and Developer Profile.
  */
@@ -17,10 +17,8 @@ export default function Dashboard({ user, onLogout }) {
   const [showAddEntryModal, setShowAddEntryModal] = useState(false);
   const [showAddRecordPage, setShowAddRecordPage] = useState(false);
   
-  // Modern Custom Popup Alert State with Type (success/error) and Message
-  const [customAlert, setCustomAlert] = useState(null); // { type: 'success' | 'error', message: '...' }
+  const [customAlert, setCustomAlert] = useState(null);
 
-  // Theme State: Default to Light theme, persist in localStorage
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('money_tracker_theme');
     return savedTheme ? savedTheme === 'dark' : false;
@@ -44,7 +42,6 @@ export default function Dashboard({ user, onLogout }) {
 
   const [collectionSubTab, setCollectionSubTab] = useState('All');
 
-  // Owned collections state with localStorage persistence
   const [ownedCollections, setOwnedCollections] = useState(() => {
     const savedCollections = localStorage.getItem('money_tracker_owned_collections');
     return savedCollections ? JSON.parse(savedCollections) : [];
@@ -54,11 +51,9 @@ export default function Dashboard({ user, onLogout }) {
     localStorage.setItem('money_tracker_owned_collections', JSON.stringify(ownedCollections));
   }, [ownedCollections]);
 
-  // Transactions State from Backend Database
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
-  // Fetch transactions specific to the logged-in user from MongoDB backend
   useEffect(() => {
     if (user && user.id) {
       fetchTransactions();
@@ -79,7 +74,6 @@ export default function Dashboard({ user, onLogout }) {
     }
   };
 
-  // Function to handle saving a new record associated with the user to MongoDB
   const handleSaveRecord = async () => {
     if (!recordDesc.trim() || !recordAmount) {
       setCustomAlert({ type: 'error', message: 'Please enter description and amount.' });
@@ -117,7 +111,6 @@ export default function Dashboard({ user, onLogout }) {
     }
   };
 
-  // Calculate totals dynamically from real user transactions
   const totalCashIn = transactions
     .filter(t => t.type === 'cashIn')
     .reduce((acc, curr) => acc + curr.amount, 0);
@@ -183,7 +176,7 @@ export default function Dashboard({ user, onLogout }) {
   const themeColors = {
     bg: isDarkMode ? '#000000' : '#f8fafc',
     cardBg: isDarkMode ? '#0a0a0a' : '#ffffff',
-    cardAltBg: isDarkMode ? '#121212' : '#f1f5f9',
+    cardAltBg: isDarkMode ? '#121212' : '#ffffff',
     textMain: isDarkMode ? '#ffffff' : '#0f172a',
     textMuted: isDarkMode ? '#9ca3af' : '#64748b',
     border: isDarkMode ? '#1f2937' : '#e2e8f0',
@@ -276,10 +269,10 @@ export default function Dashboard({ user, onLogout }) {
             </p>
 
             <h3 style={{ fontSize: '0.9rem', color: themeColors.textMain, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShieldCheck size={16} color="#10b981" /> A Note of Gratitude
+              <ShieldCheck size={16} color="#10b981" /> Financial Secure Vault
             </h3>
             <p style={{ fontSize: '0.8rem', color: themeColors.textMuted, lineHeight: '1.5', margin: 0 }}>
-              To everyone downloading and placing your trust in Money Tracker: Thank you! Your belief inspires me to write cleaner code and build better tools. Your financial privacy and seamless experience are always my top priorities.
+              Built with precision and high-grade security, Money Tracker ensures your daily transactions and custom vaults remain private, encrypted, and lightning-fast.
             </p>
           </div>
 
@@ -521,16 +514,16 @@ export default function Dashboard({ user, onLogout }) {
                 bottom: '120px',
                 left: '0',
                 right: '0',
-                backgroundColor: themeColors.cardAltBg,
+                backgroundColor: themeColors.cardBg,
                 border: `1px solid ${themeColors.border}`,
                 borderRadius: '1.25rem',
                 padding: '1rem',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.9)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
                 zIndex: 50,
                 maxHeight: '280px',
                 overflowY: 'auto'
               }}>
-                <div style={{ display: 'flex', backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', backgroundColor: themeColors.cardAltBg, border: `1px solid ${themeColors.border}`, borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
                   {['All', 'Prebuild', 'Owned'].map((tab) => (
                     <button
                       key={tab}
@@ -572,7 +565,7 @@ export default function Dashboard({ user, onLogout }) {
                           alignItems: 'center',
                           padding: '0.65rem 0.75rem',
                           borderRadius: '0.75rem',
-                          backgroundColor: selectedCategory === cat.name ? '#1a2e26' : 'transparent',
+                          backgroundColor: selectedCategory === cat.name ? (isDarkMode ? '#1a2e26' : '#e2f8f0') : 'transparent',
                           cursor: 'pointer'
                         }}
                       >
@@ -2037,7 +2030,6 @@ export default function Dashboard({ user, onLogout }) {
             <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: themeColors.textMain, margin: '0 0 1.25rem 0' }}>Settings</h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {/* Theme Switcher Option */}
               <div 
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 style={{
