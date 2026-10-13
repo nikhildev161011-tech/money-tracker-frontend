@@ -20,7 +20,6 @@ export default function Splash() {
       overflow: 'hidden'
     }}>
       
-      {/* मॉडर्न और प्रीमियम पल्स व ग्लोइंग एनिमेशन */}
       <style>{`
         @keyframes premiumPulse {
           0% { 
@@ -41,7 +40,7 @@ export default function Splash() {
         }
       `}</style>
 
-      {/* बड़ा और प्रीमियम एनिमेटेड वॉलेट आइकॉन */}
+    
       <div className="premium-splash-wallet" style={{
         display: 'flex',
         alignItems: 'center',
