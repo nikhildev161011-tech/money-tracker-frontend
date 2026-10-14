@@ -11,7 +11,7 @@ export default function Splash() {
     <div style={{
       width: '100vw',
       minHeight: '100vh',
-      backgroundColor: '#000000', // एकदम डार्क ब्लैक बैकग्राउंड
+      backgroundColor: '#000000',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
