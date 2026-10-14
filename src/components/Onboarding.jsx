@@ -1,30 +1,21 @@
 /**
  * Component: Onboarding
- * Description: Renders the multi-step slider/carousel with 100% mobile responsiveness,
- *              animated icons, Skip/Next controls, safe area padding, and dynamic theme support.
+ * Description: Renders the multi-step slider/carousel without circular borders,
+ *              featuring realistic animated icons, Skip/Next controls, and clean completion.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function Onboarding({ onFinish }) {
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Theme state synced with localStorage, defaulting to Light theme (false = light, true = dark)
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('money_tracker_theme');
-    return savedTheme ? savedTheme === 'dark' : false;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('money_tracker_theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
+  // ऑनबोर्डिंग स्लाइड्स (रियलिस्टिक मनी और चार्ट आइकॉन्स के साथ)
   const slides = [
     {
       title: "Record Daily Spending",
       description: "Easily log your daily spending and organize your spending habits.",
       icon: (
-        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="5" width="20" height="14" rx="2" />
           <line x1="2" y1="10" x2="22" y2="10" />
           <path d="M6 15h2" />
@@ -36,7 +27,7 @@ export default function Onboarding({ onFinish }) {
       title: "Smart Categories",
       description: "Sort your spending into categories for easy viewing.",
       icon: (
-        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       )
@@ -45,21 +36,13 @@ export default function Onboarding({ onFinish }) {
       title: "Spending Insights",
       description: "Get a clear view of your spending habits with intuitive charts.",
       icon: (
-        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 21H3V3" />
           <path d="M22 7l-5 5-5-5-3 3" />
         </svg>
       )
     }
   ];
-
-  const themeColors = {
-    bg: isDarkMode ? '#000000' : '#f8fafc',
-    cardBg: isDarkMode ? '#111827' : '#ffffff',
-    textMain: isDarkMode ? '#ffffff' : '#0f172a',
-    textMuted: isDarkMode ? '#9ca3af' : '#64748b',
-    border: isDarkMode ? '#1f2937' : '#e2e8f0',
-  };
 
   const handleNext = () => {
     if (currentStep < slides.length - 1) {
@@ -88,27 +71,23 @@ export default function Onboarding({ onFinish }) {
   return (
     <div style={{
       width: '100vw',
-      height: '100dvh',
-      backgroundColor: themeColors.bg,
-      color: themeColors.textMain,
+      minHeight: '100vh',
+      backgroundColor: '#000000',
+      color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom)) 1.25rem',
+      padding: '2rem 1.5rem',
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      overflow: 'hidden',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      transition: 'background-color 0.3s ease, color 0.3s ease'
+      overflowX: 'hidden'
     }}>
       
+      {/* CSS Animations for smooth floating icons and fade-in */}
       <style>{`
         @keyframes floatIcon {
           0% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-8px) scale(1.05); }
+          50% { transform: translateY(-10px) scale(1.06); }
           100% { transform: translateY(0px) scale(1); }
         }
         .animated-icon {
@@ -124,69 +103,51 @@ export default function Onboarding({ onFinish }) {
         }
       `}</style>
 
-      {/* Top Header: Theme Toggle and Skip Button */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '380px', minHeight: '38px' }}>
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          style={{
-            backgroundColor: themeColors.cardBg,
-            border: `1px solid ${themeColors.border}`,
-            borderRadius: '50%',
-            width: '38px',
-            height: '38px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-          }}
-          title="Toggle Theme"
-        >
-          {isDarkMode ? '☀️' : '🌙'}
-        </button>
-
+      {/* Top Header: Skip Button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <button 
           onClick={handleSkip}
           style={{
             background: 'none',
             border: 'none',
-            color: themeColors.textMuted,
+            color: '#9ca3af',
             fontSize: '0.9rem',
             fontWeight: '600',
             cursor: 'pointer',
-            padding: '0.25rem 0.5rem'
+            padding: '0.5rem'
           }}
         >
           Skip
         </button>
       </div>
 
-      {/* Center Content: Animated Icon & Text */}
+      {/* Center Content: Borderless Animated Icon & Text */}
       <div className="slide-container" style={{
         width: '100%',
         maxWidth: '380px',
-        margin: 'auto 0',
+        margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         textAlign: 'center'
       }}>
         
+        {/* बिना किसी बॉर्डर के बड़ा, रियलिस्टिक और एनिमेटेड आइकॉन */}
         <div className="animated-icon" style={{
-          marginBottom: '1.75rem',
+          marginBottom: '2.5rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          filter: 'drop-shadow(0 12px 20px rgba(16, 185, 129, 0.3))'
+          filter: 'drop-shadow(0 15px 25px rgba(16, 185, 129, 0.35))'
         }}>
           {slide.icon}
         </div>
 
-        <h2 style={{ fontSize: '1.65rem', fontWeight: '700', marginBottom: '0.5rem', letterSpacing: '-0.025em', color: themeColors.textMain }}>
+        {/* Title and Description */}
+        <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.75rem', letterSpacing: '-0.025em' }}>
           {slide.title}
         </h2>
-        <p style={{ color: themeColors.textMuted, fontSize: '0.88rem', lineHeight: '1.45', padding: '0 0.5rem', margin: 0 }}>
+        <p style={{ color: '#9ca3af', fontSize: '0.9rem', lineHeight: '1.5', padding: '0 1rem' }}>
           {slide.description}
         </p>
 
@@ -196,22 +157,23 @@ export default function Onboarding({ onFinish }) {
       <div style={{
         width: '100%',
         maxWidth: '380px',
+        margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.25rem',
-        paddingBottom: '0.5rem'
+        gap: '1.5rem',
+        paddingBottom: '1rem'
       }}>
         
         {/* Dots Indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
           {slides.map((_, index) => (
             <div 
               key={index}
               style={{
-                width: currentStep === index ? '22px' : '6px',
-                height: '6px',
-                borderRadius: '3px',
-                backgroundColor: currentStep === index ? '#10b981' : themeColors.border,
+                width: currentStep === index ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                backgroundColor: currentStep === index ? '#10b981' : '#374151',
                 transition: 'all 0.3s ease'
               }}
             />
@@ -219,18 +181,18 @@ export default function Onboarding({ onFinish }) {
         </div>
 
         {/* Action Buttons (Back & Next) */}
-        <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
           {currentStep > 0 && (
             <button 
               onClick={handleBack}
               style={{
                 flex: 1,
-                backgroundColor: themeColors.cardBg,
-                color: themeColors.textMain,
+                backgroundColor: '#111827',
+                color: '#ffffff',
                 fontWeight: '600',
-                padding: '0.85rem 1rem',
-                borderRadius: '0.85rem',
-                border: `1px solid ${themeColors.border}`,
+                padding: '0.9rem 1rem',
+                borderRadius: '1rem',
+                border: '1px solid #1f2937',
                 cursor: 'pointer',
                 fontSize: '0.95rem'
               }}
@@ -242,16 +204,16 @@ export default function Onboarding({ onFinish }) {
           <button 
             onClick={handleNext}
             style={{
-              flex: currentStep > 0 ? 2 : 1,
-              backgroundColor: isDarkMode ? '#ffffff' : '#0f172a',
-              color: isDarkMode ? '#000000' : '#ffffff',
+              flex: 2,
+              backgroundColor: '#ffffff',
+              color: '#000000',
               fontWeight: '600',
-              padding: '0.85rem 1rem',
-              borderRadius: '0.85rem',
+              padding: '0.9rem 1rem',
+              borderRadius: '1.25rem',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '0.95rem',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+              fontSize: '1rem',
+              boxShadow: '0 4px 12px rgba(255, 255, 255, 0.15)'
             }}
           >
             {currentStep === slides.length - 1 ? "Get Started" : "Next"}
