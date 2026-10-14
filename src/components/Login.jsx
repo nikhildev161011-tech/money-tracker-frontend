@@ -1,15 +1,43 @@
 // Component: Login
-// Description: Premium authentication screen featuring realistic cash note drop animation, typewriter signature, and debugging console logs.
+// Description: Premium authentication screen featuring large floating/tossing dollar coins, PWA app download trigger, black popup error card, and typewriter signature.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
 
 export default function Login({ onGoogleLogin }) {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
 
-  // Handle Google Sign-In trigger with debugging log
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowInstallBtn(false);
+      }
+    } else {
+      alert("To install, tap your browser menu (three dots) and select 'Install app' or 'Add to Home screen'.");
+    }
+  };
+
   const handleGoogleClick = (e) => {
     e.preventDefault();
     console.log("Google button was clicked successfully!");
@@ -43,29 +71,29 @@ export default function Login({ onGoogleLogin }) {
       padding: '2rem 1.25rem',
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      position: 'relative'
     }}>
       
-      {/* Styles for realistic cash drop animation, permanent blue checkboxes, and typewriter effect */}
       <style>{`
-        @keyframes dropInCash {
-          0% { transform: translateY(-50px) rotate(-10deg) scale(0.7); opacity: 0; }
-          60% { transform: translateY(10px) rotate(3deg) scale(1.05); opacity: 1; }
-          100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 1; }
+        @keyframes tossCoin {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg) scale(1);
+          }
+          50% {
+            transform: translateY(-16px) rotate(12deg) scale(1.08);
+          }
         }
-        .animated-cash-note {
-          animation: dropInCash 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        .tossing-dollar-1 {
+          animation: tossCoin 2.5s ease-in-out infinite;
+        }
+        .tossing-dollar-2 {
+          animation: tossCoin 2.8s ease-in-out infinite 0.4s;
+        }
+        .tossing-dollar-3 {
+          animation: tossCoin 2.2s ease-in-out infinite 0.8s;
         }
 
-        @keyframes floatNote {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-8px) rotate(1deg); }
-        }
-        .floating-cash-note {
-          animation: floatNote 3.5s ease-in-out infinite 1.2s;
-        }
-
-        /* Typewriter animation without blinking cursor line */
         @keyframes typing {
           0% { width: 0; }
           70% { width: 100%; }
@@ -81,31 +109,28 @@ export default function Login({ onGoogleLogin }) {
           animation: typing 5s steps(32, end) infinite;
         }
 
-        .google-btn {
+        .google-btn, .install-btn {
           width: 100%;
-          background-color: #ffffff;
-          color: #000000;
+          max-width: 380px;
+          background-color: #121214;
+          color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.75rem;
-          padding: 0.9rem 1rem;
-          border-radius: 0.85rem;
-          border: none;
-          font-weight: 600;
+          padding: 0.95rem 1rem;
+          border-radius: 9999px;
+          border: 1px solid #27272a;
+          font-weight: 500;
           font-size: 0.95rem;
           cursor: pointer;
           transition: all 0.25s ease;
-          box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
         }
 
-        .google-btn:hover {
-          background-color: #f4f4f5;
+        .google-btn:hover, .install-btn:hover {
+          background-color: #1a1a1e;
+          border-color: #3f3f46;
           transform: translateY(-1px);
-        }
-
-        .google-btn:active {
-          transform: translateY(0);
         }
 
         .google-btn:disabled {
@@ -171,7 +196,53 @@ export default function Login({ onGoogleLogin }) {
         }
       `}</style>
 
-      <div style={{ height: '10px' }}></div>
+      {/* Black Popup Card Modal for Error Messages */}
+      {error && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#121214',
+            border: '1px solid #27272a',
+            borderRadius: '16px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '320px',
+            textAlign: 'center',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ color: '#ef4444', fontSize: '1.25rem', fontWeight: '700', marginBottom: '10px' }}>Notice</div>
+            <p style={{ color: '#ffffff', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: '20px' }}>
+              {error}
+            </p>
+            <button 
+              onClick={() => setError('')}
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '9999px',
+                padding: '10px 20px',
+                fontWeight: '600',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ height: '5px' }}></div>
 
       {/* Main container */}
       <div style={{
@@ -184,33 +255,49 @@ export default function Login({ onGoogleLogin }) {
         margin: 'auto 0'
       }}>
         
-        {/* Animated Realistic Currency Note Icon */}
-        <div className="animated-cash-note" style={{ marginBottom: '1.5rem' }}>
-          <div className="floating-cash-note" style={{
+        {/* Large Floating & Tossing Dollar Coins Visual Section */}
+        <div style={{ marginBottom: '1.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', height: '110px' }}>
+          <div className="tossing-dollar-1" style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            backgroundColor: '#10b981',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '90px',
-            height: '64px',
-            borderRadius: '12px',
-            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-            border: '2px solid rgba(37, 99, 235, 0.4)',
-            filter: 'drop-shadow(0 15px 25px rgba(37, 99, 235, 0.35))'
+            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.4)',
+            border: '2px solid rgba(255,255,255,0.3)'
           }}>
-            <svg 
-              width="50" 
-              height="34" 
-              viewBox="0 0 24 16" 
-              fill="none" 
-              stroke="#2563eb" 
-              strokeWidth="1.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <rect x="1" y="1" width="22" height="14" rx="2" fill="rgba(37, 99, 235, 0.08)" />
-              <circle cx="12" cy="8" r="3" stroke="#2563eb" strokeWidth="1.5" fill="rgba(37, 99, 235, 0.2)" />
-              <path d="M4 5h2M4 11h2M18 5h2M18 11h2" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <span style={{ color: '#ffffff', fontSize: '28px', fontWeight: 'bold' }}>$</span>
+          </div>
+
+          <div className="tossing-dollar-2" style={{
+            width: '72px',
+            height: '72px',
+            borderRadius: '50%',
+            backgroundColor: '#10b981',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 15px 35px rgba(16, 185, 129, 0.5)',
+            border: '2px solid rgba(255,255,255,0.4)',
+            marginTop: '-20px'
+          }}>
+            <span style={{ color: '#ffffff', fontSize: '36px', fontWeight: 'bold' }}>$</span>
+          </div>
+
+          <div className="tossing-dollar-3" style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            backgroundColor: '#10b981',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.4)',
+            border: '2px solid rgba(255,255,255,0.3)'
+          }}>
+            <span style={{ color: '#ffffff', fontSize: '28px', fontWeight: 'bold' }}>$</span>
           </div>
         </div>
 
@@ -218,49 +305,13 @@ export default function Login({ onGoogleLogin }) {
         <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.35rem', letterSpacing: '-0.025em' }}>
           Money Tracker
         </h1>
-        <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '2rem', lineHeight: '1.5' }}>
+        <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
           Securely manage your expenses with seamless Google authentication.
         </p>
 
-        {/* Error message box */}
-        {error && (
-          <div style={{
-            width: '100%',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#ef4444',
-            padding: '0.75rem 1rem',
-            borderRadius: '0.75rem',
-            fontSize: '0.82rem',
-            marginBottom: '1.25rem',
-            textAlign: 'left',
-            boxSizing: 'border-box'
-          }}>
-            {error}
-          </div>
-        )}
-
-        {/* Authentication action wrapper */}
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Authentication and Download action wrapper */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
           
-          {/* Professional Checkbox with Permanent Blue Border */}
-          <div style={{ textAlign: 'left' }}>
-            <label className="checkbox-container">
-              <input 
-                type="checkbox" 
-                checked={agreed} 
-                onChange={(e) => {
-                  setAgreed(e.target.checked);
-                  setError('');
-                }}
-              />
-              <span className="checkmark"></span>
-              <span style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
-                By continuing, you agree to our <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Privacy Policy</a>.
-              </span>
-            </label>
-          </div>
-
           {/* Continue with Google Button */}
           <button 
             type="button"
@@ -277,11 +328,63 @@ export default function Login({ onGoogleLogin }) {
             Continue with Google
           </button>
 
+          {/* Download Money Tracker Button (Triggers direct app installation prompt without needing 3 dots) */}
+          <button 
+            type="button"
+            onClick={handleInstallClick}
+            className="install-btn"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download Money Tracker
+          </button>
+
+          {/* Professional Checkbox with Permanent Blue Border */}
+          <div style={{ textAlign: 'left', width: '100%', marginTop: '0.25rem' }}>
+            <label className="checkbox-container">
+              <input 
+                type="checkbox" 
+                checked={agreed} 
+                onChange={(e) => {
+                  setAgreed(e.target.checked);
+                  setError('');
+                }}
+              />
+              <span className="checkmark"></span>
+              <span style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
+                By continuing, you agree to our <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Privacy Policy</a>.
+              </span>
+            </label>
+          </div>
+
         </div>
 
-        {/* Developer signature with infinite typewriter animation */}
+        {/* Links section */}
+        <div style={{
+          display: 'flex',
+          gap: '20px',
+          fontSize: '0.85rem',
+          marginTop: '1.5rem',
+          alignItems: 'center'
+        }}>
+          <a 
+            href="https://my-portfolio-omega-self-73.vercel.app/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ color: '#9ca3af', textDecoration: 'underline' }}
+          >
+            About Developer
+          </a>
+          <span style={{ color: '#52525b' }}>|</span>
+          <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Thank you for trusting us</span>
+        </div>
+
+        {/* Developer signature with infinite typewriter animation positioned at bottom */}
         <div style={{ 
-          marginTop: '3rem', 
+          marginTop: '2rem', 
           fontSize: '0.8rem', 
           color: '#9ca3af',
           letterSpacing: '0.03em',
@@ -298,7 +401,7 @@ export default function Login({ onGoogleLogin }) {
 
       </div>
 
-      <div style={{ height: '10px' }}></div>
+      <div style={{ height: '5px' }}></div>
 
     </div>
   );
