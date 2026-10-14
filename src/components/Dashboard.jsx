@@ -1,11 +1,10 @@
 /**
  * Component: Dashboard (Part 1 of 3)
- * Description: Complete, 100% mobile-responsive dashboard featuring Home, Insights, 
- * Collections, Compact Add Entry Modal, Add Record, Edit Collection, Theme Switcher, and Developer Profile.
+ * Description: Complete pure black dashboard with state management and database fetch logic.
  */
 
 import React, { useState, useEffect } from 'react';
-import { Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, Ghost, Code, PieChart, Layers, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, Laptop, LogOut, Trash2, Check, Wallet, Film, Utensils, Car, Box, HeartPulse, Edit3, Plane, GraduationCap, ShoppingCart, Home as HomeIcon, Dumbbell, Briefcase, PlusCircle, X, Receipt, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, Ghost, Code, PieChart, Layers, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, Laptop, LogOut, Trash2, Check, Wallet, Film, Utensils, Car, Box, HeartPulse, Edit3, Plane, GraduationCap, ShoppingCart, Home as HomeIcon, Dumbbell, Briefcase, PlusCircle, X, Receipt, ChevronDown } from 'lucide-react';
 
 export default function Dashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('home');
@@ -17,17 +16,6 @@ export default function Dashboard({ user, onLogout }) {
   const [showAddEntryModal, setShowAddEntryModal] = useState(false);
   const [showAddRecordPage, setShowAddRecordPage] = useState(false);
   
-  const [customAlert, setCustomAlert] = useState(null);
-
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('money_tracker_theme');
-    return savedTheme ? savedTheme === 'dark' : false;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('money_tracker_theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-  
   const [recordType, setRecordType] = useState('cashIn');
   const [recordDesc, setRecordDesc] = useState('');
   const [recordAmount, setRecordAmount] = useState('');
@@ -36,21 +24,13 @@ export default function Dashboard({ user, onLogout }) {
   const [categoryTab, setCategoryTab] = useState('All');
 
   const [showEditCollectionPage, setShowEditCollectionPage] = useState(false);
-  const [editingCollectionName, setEditingCollectionName] = useState('Salary & Income');
+  const [editingCollectionName, setEditingCollectionName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#10b981');
   const [selectedIcon, setSelectedIcon] = useState('wallet');
 
   const [collectionSubTab, setCollectionSubTab] = useState('All');
 
-  const [ownedCollections, setOwnedCollections] = useState(() => {
-    const savedCollections = localStorage.getItem('money_tracker_owned_collections');
-    return savedCollections ? JSON.parse(savedCollections) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('money_tracker_owned_collections', JSON.stringify(ownedCollections));
-  }, [ownedCollections]);
-
+  const [ownedCollections, setOwnedCollections] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
@@ -76,7 +56,7 @@ export default function Dashboard({ user, onLogout }) {
 
   const handleSaveRecord = async () => {
     if (!recordDesc.trim() || !recordAmount) {
-      setCustomAlert({ type: 'error', message: 'Please enter description and amount.' });
+      alert("Please enter description and amount.");
       return;
     }
 
@@ -97,17 +77,53 @@ export default function Dashboard({ user, onLogout }) {
 
       const result = await response.json();
       if (result.success) {
-        setCustomAlert({ type: 'success', message: 'Record added successfully!' });
         setRecordDesc('');
         setRecordAmount('');
         setShowAddRecordPage(false);
         fetchTransactions();
       } else {
-        setCustomAlert({ type: 'error', message: 'Failed to add record.' });
+        alert("Failed to add record.");
       }
     } catch (error) {
       console.error("Error saving record:", error);
-      setCustomAlert({ type: 'error', message: 'Error connecting to backend server.' });
+      alert("Error connecting to backend server.");
+    }
+  };
+
+  const handleDeleteTransaction = async (txnId) => {
+    try {
+      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com/api/transactions/${txnId}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (result.success) {
+        fetchTransactions();
+      } else {
+        alert("Failed to delete transaction.");
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to permanently delete your account and all data?");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com/api/users/${user.id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert("Account permanently deleted.");
+        onLogout();
+      } else {
+        alert("Failed to delete account.");
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      alert("Error connecting to backend server.");
     }
   };
 
@@ -172,24 +188,13 @@ export default function Dashboard({ user, onLogout }) {
   }));
 
   const categoriesList = [...prebuiltCategories, ...ownedCategoriesList];
-
-  const themeColors = {
-    bg: isDarkMode ? '#000000' : '#f8fafc',
-    cardBg: isDarkMode ? '#0a0a0a' : '#ffffff',
-    cardAltBg: isDarkMode ? '#121212' : '#ffffff',
-    textMain: isDarkMode ? '#ffffff' : '#0f172a',
-    textMuted: isDarkMode ? '#9ca3af' : '#64748b',
-    border: isDarkMode ? '#1f2937' : '#e2e8f0',
-    modalBg: isDarkMode ? '#111115' : '#ffffff'
-  };
-
   if (showDeveloperPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: themeColors.bg,
-        color: themeColors.textMain,
+        backgroundColor: '#000000',
+        color: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -207,14 +212,25 @@ export default function Dashboard({ user, onLogout }) {
           .animated-portfolio-btn {
             animation: pulseGlow 2s infinite;
           }
+          input[type=number]::-webkit-inner-spin-button, 
+          input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+          }
+          input[type=number] {
+            -moz-appearance: textfield;
+          }
+          ::-webkit-scrollbar {
+            display: none;
+          }
         `}</style>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
           <button 
             onClick={() => setShowDeveloperPage(false)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -222,12 +238,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: themeColors.textMain
+              color: '#ffffff'
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '0.95rem', fontWeight: '600', margin: 0, color: themeColors.textMuted, letterSpacing: '0.05em' }}>Developer Profile</h2>
+          <h2 style={{ fontSize: '0.95rem', fontWeight: '600', margin: 0, color: '#9ca3af', letterSpacing: '0.05em' }}>Developer Profile</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -261,23 +277,23 @@ export default function Dashboard({ user, onLogout }) {
           </p>
 
           <div style={{ width: '100%', textAlign: 'left', marginBottom: '1.5rem', padding: '0 0.25rem' }}>
-            <h3 style={{ fontSize: '0.9rem', color: themeColors.textMain, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Code size={16} color="#3b82f6" /> About the Creator
             </h3>
-            <p style={{ fontSize: '0.8rem', color: themeColors.textMuted, lineHeight: '1.5', margin: '0 0 1rem 0' }}>
+            <p style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: '1.5', margin: '0 0 1rem 0' }}>
               Hello! I am NIKHIL GUPTA, a first-year BCA student at IGNOU and a passionate software developer. I love crafting high-performance, mobile-first web apps with clean aesthetics, with an ultimate vision to build impactful technology at Google.
             </p>
 
-            <h3 style={{ fontSize: '0.9rem', color: themeColors.textMain, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShieldCheck size={16} color="#10b981" /> Financial Secure Vault
+            <h3 style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldCheck size={16} color="#10b981" /> A Note of Gratitude
             </h3>
-            <p style={{ fontSize: '0.8rem', color: themeColors.textMuted, lineHeight: '1.5', margin: 0 }}>
-              Built with precision and high-grade security, Money Tracker ensures your daily transactions and custom vaults remain private, encrypted, and lightning-fast.
+            <p style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: '1.5', margin: 0 }}>
+              To everyone downloading and placing your trust in Money Tracker: Thank you! Your belief inspires me to write cleaner code and build better tools. Your financial privacy and seamless experience are always my top priorities.
             </p>
           </div>
 
           <a 
-            href="https://my-portfolio-omega-self-73.vercel.app/" 
+            href="https://nikhildev161011-tech.github.io/Nikhil-s-Portfolio/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="animated-portfolio-btn"
@@ -311,8 +327,8 @@ export default function Dashboard({ user, onLogout }) {
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: themeColors.bg,
-        color: themeColors.textMain,
+        backgroundColor: '#000000',
+        color: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -322,12 +338,26 @@ export default function Dashboard({ user, onLogout }) {
         overflowX: 'hidden',
         position: 'relative'
       }}>
+        <style>{`
+          input[type=number]::-webkit-inner-spin-button, 
+          input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+          }
+          input[type=number] {
+            -moz-appearance: textfield;
+          }
+          ::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
           <button 
             onClick={() => setShowAddRecordPage(false)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -335,12 +365,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: themeColors.textMain
+              color: '#ffffff'
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: themeColors.textMain, letterSpacing: '0.05em' }}>Add Record</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Add Record</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -357,8 +387,8 @@ export default function Dashboard({ user, onLogout }) {
         }}>
           <div style={{
             display: 'flex',
-            backgroundColor: themeColors.cardBg,
-            border: `1px solid ${themeColors.border}`,
+            backgroundColor: '#0a0a0a',
+            border: '1px solid #1f2937',
             borderRadius: '1rem',
             padding: '0.3rem'
           }}>
@@ -366,8 +396,8 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setRecordType('cashIn')}
               style={{
                 flex: 1,
-                backgroundColor: recordType === 'cashIn' ? themeColors.border : 'transparent',
-                color: recordType === 'cashIn' ? '#4ade80' : themeColors.textMuted,
+                backgroundColor: recordType === 'cashIn' ? '#1f2937' : 'transparent',
+                color: recordType === 'cashIn' ? '#4ade80' : '#9ca3af',
                 border: 'none',
                 borderRadius: '0.75rem',
                 padding: '0.75rem',
@@ -383,8 +413,8 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setRecordType('cashOut')}
               style={{
                 flex: 1,
-                backgroundColor: recordType === 'cashOut' ? themeColors.border : 'transparent',
-                color: recordType === 'cashOut' ? '#f87171' : themeColors.textMuted,
+                backgroundColor: recordType === 'cashOut' ? '#1f2937' : 'transparent',
+                color: recordType === 'cashOut' ? '#f87171' : '#9ca3af',
                 border: 'none',
                 borderRadius: '0.75rem',
                 padding: '0.75rem',
@@ -400,8 +430,8 @@ export default function Dashboard({ user, onLogout }) {
 
           <div>
             <div style={{
-              backgroundColor: themeColors.cardBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #1f2937',
               borderRadius: '1rem',
               padding: '0.85rem 1rem',
               display: 'flex',
@@ -417,23 +447,23 @@ export default function Dashboard({ user, onLogout }) {
                 style={{
                   backgroundColor: 'transparent',
                   border: 'none',
-                  color: themeColors.textMain,
+                  color: '#ffffff',
                   fontSize: '0.95rem',
                   outline: 'none',
                   width: '100%'
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem' }}>
-                <div style={{ height: '2px', backgroundColor: themeColors.border, width: '100%', borderRadius: '1px' }}></div>
+                <div style={{ height: '2px', backgroundColor: '#374151', width: '100%', borderRadius: '1px' }}></div>
               </div>
-              <span style={{ fontSize: '0.65rem', color: themeColors.textMuted, textAlign: 'right' }}>{recordDesc.length}/40</span>
+              <span style={{ fontSize: '0.65rem', color: '#6b7280', textAlign: 'right' }}>{recordDesc.length}/40</span>
             </div>
           </div>
 
           <div>
             <div style={{
-              backgroundColor: themeColors.cardBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #1f2937',
               borderRadius: '1rem',
               padding: '0.85rem 1rem',
               display: 'flex',
@@ -441,7 +471,7 @@ export default function Dashboard({ user, onLogout }) {
               gap: '0.25rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: themeColors.textMuted, fontSize: '1rem', fontWeight: 'bold' }}>₹</span>
+                <span style={{ color: '#9ca3af', fontSize: '1rem', fontWeight: 'bold' }}>₹</span>
                 <input 
                   type="number"
                   placeholder="Amount"
@@ -450,7 +480,7 @@ export default function Dashboard({ user, onLogout }) {
                   style={{
                     backgroundColor: 'transparent',
                     border: 'none',
-                    color: themeColors.textMain,
+                    color: '#ffffff',
                     fontSize: '1rem',
                     fontWeight: '600',
                     outline: 'none',
@@ -458,8 +488,8 @@ export default function Dashboard({ user, onLogout }) {
                   }}
                 />
               </div>
-              <div style={{ height: '2px', backgroundColor: themeColors.border, width: '100%', borderRadius: '1px', marginTop: '0.2rem' }}></div>
-              <span style={{ fontSize: '0.65rem', color: themeColors.textMuted, textAlign: 'right' }}>{recordAmount.length}/8</span>
+              <div style={{ height: '2px', backgroundColor: '#374151', width: '100%', borderRadius: '1px', marginTop: '0.2rem' }}></div>
+              <span style={{ fontSize: '0.65rem', color: '#6b7280', textAlign: 'right' }}>{recordAmount.length}/8</span>
             </div>
           </div>
 
@@ -469,11 +499,11 @@ export default function Dashboard({ user, onLogout }) {
                 key={amt}
                 onClick={() => setRecordAmount(amt.replace('+₹', ''))}
                 style={{
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
+                  backgroundColor: '#0a0a0a',
+                  border: '1px solid #1f2937',
                   borderRadius: '0.75rem',
                   padding: '0.6rem 0.2rem',
-                  color: themeColors.textMuted,
+                  color: '#9ca3af',
                   fontSize: '0.75rem',
                   fontWeight: '600',
                   cursor: 'pointer'
@@ -485,12 +515,12 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, fontWeight: '600', marginBottom: '0.5rem' }}>Category</p>
+            <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: '600', marginBottom: '0.5rem' }}>Category</p>
             <div 
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
               style={{
-                backgroundColor: themeColors.cardBg,
-                border: `1px solid ${themeColors.border}`,
+                backgroundColor: '#0a0a0a',
+                border: '1px solid #1f2937',
                 borderRadius: '1rem',
                 padding: '0.9rem 1rem',
                 display: 'flex',
@@ -503,9 +533,9 @@ export default function Dashboard({ user, onLogout }) {
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(74, 222, 128, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Wallet size={14} color="#4ade80" />
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: themeColors.textMain }}>{selectedCategory}</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#ffffff' }}>{selectedCategory}</span>
               </div>
-              <ChevronDown size={18} color={themeColors.textMuted} />
+              <ChevronDown size={18} color="#9ca3af" />
             </div>
 
             {showCategoryDropdown && (
@@ -514,16 +544,16 @@ export default function Dashboard({ user, onLogout }) {
                 bottom: '120px',
                 left: '0',
                 right: '0',
-                backgroundColor: themeColors.cardBg,
-                border: `1px solid ${themeColors.border}`,
+                backgroundColor: '#121212',
+                border: '1px solid #262626',
                 borderRadius: '1.25rem',
                 padding: '1rem',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.9)',
                 zIndex: 50,
                 maxHeight: '280px',
                 overflowY: 'auto'
               }}>
-                <div style={{ display: 'flex', backgroundColor: themeColors.cardAltBg, border: `1px solid ${themeColors.border}`, borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
                   {['All', 'Prebuild', 'Owned'].map((tab) => (
                     <button
                       key={tab}
@@ -533,8 +563,8 @@ export default function Dashboard({ user, onLogout }) {
                       }}
                       style={{
                         flex: 1,
-                        backgroundColor: categoryTab === tab ? themeColors.border : 'transparent',
-                        color: themeColors.textMain,
+                        backgroundColor: categoryTab === tab ? '#1f2937' : 'transparent',
+                        color: '#ffffff',
                         border: 'none',
                         borderRadius: '1.25rem',
                         padding: '0.4rem',
@@ -565,13 +595,13 @@ export default function Dashboard({ user, onLogout }) {
                           alignItems: 'center',
                           padding: '0.65rem 0.75rem',
                           borderRadius: '0.75rem',
-                          backgroundColor: selectedCategory === cat.name ? (isDarkMode ? '#1a2e26' : '#e2f8f0') : 'transparent',
+                          backgroundColor: selectedCategory === cat.name ? '#1a2e26' : 'transparent',
                           cursor: 'pointer'
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                           {cat.icon}
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: themeColors.textMain }}>{cat.name}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ffffff' }}>{cat.name}</span>
                         </div>
                         {selectedCategory === cat.name && <Check size={16} color="#4ade80" />}
                       </div>
@@ -587,12 +617,12 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowAddRecordPage(false)}
             style={{
               flex: 1,
-              backgroundColor: themeColors.cardBg,
-              color: themeColors.textMain,
+              backgroundColor: '#0a0a0a',
+              color: '#ffffff',
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: `1px solid ${themeColors.border}`,
+              border: '1px solid #1f2937',
               cursor: 'pointer',
               fontSize: '0.95rem'
             }}
@@ -604,15 +634,15 @@ export default function Dashboard({ user, onLogout }) {
             onClick={handleSaveRecord}
             style={{
               flex: 1.5,
-              backgroundColor: isDarkMode ? '#ffffff' : '#0f172a',
-              color: isDarkMode ? '#000000' : '#ffffff',
+              backgroundColor: '#ffffff',
+              color: '#000000',
               fontWeight: '700',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
               border: 'none',
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+              boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
             }}
           >
             Add
@@ -621,13 +651,14 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   if (showEditCollectionPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: themeColors.bg,
-        color: themeColors.textMain,
+        backgroundColor: '#000000',
+        color: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -636,12 +667,17 @@ export default function Dashboard({ user, onLogout }) {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         overflowX: 'hidden'
       }}>
+        <style>{`
+          ::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
           <button 
             onClick={() => setShowEditCollectionPage(false)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -649,12 +685,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: themeColors.textMain
+              color: '#ffffff'
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: themeColors.textMain, letterSpacing: '0.05em' }}>Edit Collection</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Edit Collection</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -669,10 +705,10 @@ export default function Dashboard({ user, onLogout }) {
           justifyContent: 'center'
         }}>
           <div>
-            <label style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Collection Name</label>
+            <label style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Collection Name</label>
             <div style={{
-              backgroundColor: themeColors.cardBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #1f2937',
               borderRadius: '1rem',
               padding: '0.75rem 1rem',
               display: 'flex',
@@ -681,12 +717,13 @@ export default function Dashboard({ user, onLogout }) {
             }}>
               <input 
                 type="text"
+                placeholder="Enter Collection Name"
                 value={editingCollectionName}
                 onChange={(e) => setEditingCollectionName(e.target.value)}
                 style={{
                   backgroundColor: 'transparent',
                   border: 'none',
-                  color: themeColors.textMain,
+                  color: '#ffffff',
                   fontSize: '1rem',
                   fontWeight: '600',
                   outline: 'none',
@@ -694,15 +731,15 @@ export default function Dashboard({ user, onLogout }) {
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                <div style={{ height: '2px', backgroundColor: themeColors.textMain, width: '60%', borderRadius: '1px' }}></div>
-                <span style={{ fontSize: '0.7rem', color: themeColors.textMuted }}>{editingCollectionName.length}/25</span>
+                <div style={{ height: '2px', backgroundColor: '#ffffff', width: '60%', borderRadius: '1px' }}></div>
+                <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{editingCollectionName.length}/25</span>
               </div>
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Theme Color</label>
-            <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+            <label style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Theme Color</label>
+            <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {['#3b82f6', '#0d9488', '#10b981', '#f59e0b', '#ec4899', '#a855f7', '#facc15', '#06b6d4', '#6366f1'].map((color) => (
                 <div 
                   key={color}
@@ -727,8 +764,8 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Collection Icon</label>
-            <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+            <label style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Collection Icon</label>
+            <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {[
                 { id: 'plane', icon: <Plane size={20} /> },
                 { id: 'edu', icon: <GraduationCap size={20} /> },
@@ -746,9 +783,9 @@ export default function Dashboard({ user, onLogout }) {
                     width: '50px',
                     height: '50px',
                     borderRadius: '1rem',
-                    backgroundColor: selectedIcon === item.id ? '#1e3a8a' : themeColors.cardBg,
-                    border: selectedIcon === item.id ? '1px solid #3b82f6' : `1px solid ${themeColors.border}`,
-                    color: selectedIcon === item.id ? '#ffffff' : themeColors.textMuted,
+                    backgroundColor: selectedIcon === item.id ? '#1e3a8a' : '#0a0a0a',
+                    border: selectedIcon === item.id ? '1px solid #3b82f6' : '1px solid #1f2937',
+                    color: selectedIcon === item.id ? '#ffffff' : '#9ca3af',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -767,12 +804,12 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => {
               setOwnedCollections(prev => prev.filter(item => item.name !== editingCollectionName));
-              setCustomAlert({ type: 'success', message: 'Collection deleted successfully.' });
+              alert("Collection deleted successfully.");
               setShowEditCollectionPage(false);
             }}
             style={{
               flex: 1,
-              backgroundColor: themeColors.cardBg,
+              backgroundColor: '#0a0a0a',
               color: '#f87171',
               fontWeight: '600',
               padding: '0.9rem 1rem',
@@ -792,25 +829,22 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => {
               if (editingCollectionName.trim() !== '') {
-                setOwnedCollections(prev => {
-                  const filtered = prev.filter(item => item.name !== editingCollectionName);
-                  return [...filtered, { name: editingCollectionName, color: selectedColor }];
-                });
+                setOwnedCollections([{ name: editingCollectionName, color: selectedColor, icon: selectedIcon }]);
               }
-              setCustomAlert({ type: 'success', message: 'Changes saved successfully!' });
+              alert("Changes saved successfully!");
               setShowEditCollectionPage(false);
             }}
             style={{
               flex: 1.5,
-              backgroundColor: isDarkMode ? '#ffffff' : '#0f172a',
-              color: isDarkMode ? '#000000' : '#ffffff',
+              backgroundColor: '#ffffff',
+              color: '#000000',
               fontWeight: '700',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
               border: 'none',
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+              boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
             }}
           >
             Save Changes
@@ -819,14 +853,13 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
-
   if (showSummaryPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: themeColors.bg,
-        color: themeColors.textMain,
+        backgroundColor: '#000000',
+        color: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -839,8 +872,8 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => setShowSummaryPage(false)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -848,12 +881,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: themeColors.textMain
+              color: '#ffffff'
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: themeColors.textMain, letterSpacing: '0.05em' }}>Summary</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Summary</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -869,18 +902,18 @@ export default function Dashboard({ user, onLogout }) {
           gap: '2rem'
         }}>
           <div style={{ textAlign: 'center', width: '100%' }}>
-            <p style={{ color: themeColors.textMuted, fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Amount</p>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: themeColors.textMain, margin: 0 }}>₹{netBalance.toFixed(2)}</h1>
+            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Amount</p>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>₹{netBalance.toFixed(2)}</h1>
           </div>
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: themeColors.cardBg, borderRadius: '1rem', border: `1px solid ${themeColors.border}` }}>
-              <span style={{ color: themeColors.textMuted, fontSize: '0.9rem', fontWeight: '600' }}>Total Cash In</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: '#0a0a0a', borderRadius: '1rem', border: '1px solid #1f2937' }}>
+              <span style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: '600' }}>Total Cash In</span>
               <span style={{ color: '#4ade80', fontSize: '1rem', fontWeight: '700' }}>₹{totalCashIn.toFixed(2)}</span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: themeColors.cardBg, borderRadius: '1rem', border: `1px solid ${themeColors.border}` }}>
-              <span style={{ color: themeColors.textMuted, fontSize: '0.9rem', fontWeight: '600' }}>Total Cash Out</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: '#0a0a0a', borderRadius: '1rem', border: '1px solid #1f2937' }}>
+              <span style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: '600' }}>Total Cash Out</span>
               <span style={{ color: '#f87171', fontSize: '1rem', fontWeight: '700' }}>₹{totalCashOut.toFixed(2)}</span>
             </div>
           </div>
@@ -891,12 +924,12 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowSummaryPage(false)}
             style={{
               width: '100%',
-              backgroundColor: themeColors.cardBg,
-              color: themeColors.textMain,
+              backgroundColor: '#0a0a0a',
+              color: '#ffffff',
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: `1px solid ${themeColors.border}`,
+              border: '1px solid #1f2937',
               cursor: 'pointer',
               fontSize: '0.95rem',
               boxShadow: '0 15px 25px rgba(0,0,0,0.8)'
@@ -914,8 +947,8 @@ export default function Dashboard({ user, onLogout }) {
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: themeColors.bg,
-        color: themeColors.textMain,
+        backgroundColor: '#000000',
+        color: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -928,8 +961,8 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => setShowFilterPage(false)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -937,12 +970,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: themeColors.textMain
+              color: '#ffffff'
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: themeColors.textMain, letterSpacing: '0.05em' }}>Filter Transactions</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Filter Transactions</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -957,16 +990,16 @@ export default function Dashboard({ user, onLogout }) {
           paddingTop: '0.5rem'
         }}>
           <div>
-            <p style={{ color: themeColors.textMuted, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Sort By</p>
-            <div style={{ display: 'flex', backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
+            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Sort By</p>
+            <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1rem', padding: '0.3rem' }}>
               {['Newest', 'Oldest'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setSortBy(item)}
                   style={{
                     flex: 1,
-                    backgroundColor: sortBy === item ? themeColors.border : 'transparent',
-                    color: themeColors.textMain,
+                    backgroundColor: sortBy === item ? '#1f2937' : 'transparent',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: '0.75rem',
                     padding: '0.75rem',
@@ -986,16 +1019,16 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ color: themeColors.textMuted, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Record Type</p>
-            <div style={{ display: 'flex', backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
+            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Record Type</p>
+            <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1rem', padding: '0.3rem' }}>
               {['All', 'Cash In', 'Cash Out'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setFilterRecordType(item)}
                   style={{
                     flex: 1,
-                    backgroundColor: filterRecordType === item ? themeColors.border : 'transparent',
-                    color: themeColors.textMain,
+                    backgroundColor: filterRecordType === item ? '#1f2937' : 'transparent',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: '0.75rem',
                     padding: '0.75rem',
@@ -1015,15 +1048,15 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ color: themeColors.textMuted, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Time</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
+            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Time</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1rem', padding: '0.3rem' }}>
               {['All', 'Daily', 'Weekly', 'Monthly'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setTimeFilter(item)}
                   style={{
-                    backgroundColor: timeFilter === item ? themeColors.border : 'transparent',
-                    color: themeColors.textMain,
+                    backgroundColor: timeFilter === item ? '#1f2937' : 'transparent',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: '0.75rem',
                     padding: '0.75rem',
@@ -1048,12 +1081,12 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowFilterPage(false)}
             style={{
               width: '100%',
-              backgroundColor: themeColors.cardBg,
-              color: themeColors.textMain,
+              backgroundColor: '#0a0a0a',
+              color: '#ffffff',
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: `1px solid ${themeColors.border}`,
+              border: '1px solid #1f2937',
               cursor: 'pointer',
               fontSize: '0.95rem',
               boxShadow: '0 15px 25px rgba(0,0,0,0.8)'
@@ -1065,12 +1098,13 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   return (
     <div style={{
       width: '100vw',
       minHeight: '100vh',
-      backgroundColor: themeColors.bg,
-      color: themeColors.textMain,
+      backgroundColor: '#000000',
+      color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -1080,94 +1114,13 @@ export default function Dashboard({ user, onLogout }) {
       overflowX: 'hidden',
       position: 'relative'
     }}>
-      
-      {/* Modern Perfectly Centered Popup Alert with Animations and Icons */}
-      {customAlert && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999,
-          padding: '1rem'
-        }}>
-          <style>{`
-            @keyframes scaleIn {
-              from { transform: scale(0.85); opacity: 0; }
-              to { transform: scale(1); opacity: 1; }
-            }
-            .popup-alert-anim {
-              animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-          `}</style>
-          <div className="popup-alert-anim" style={{
-            width: '100%',
-            maxWidth: '310px',
-            backgroundColor: themeColors.modalBg,
-            border: `1px solid ${themeColors.border}`,
-            borderRadius: '1.25rem',
-            padding: '1.75rem 1.25rem',
-            textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
-            color: themeColors.textMain
-          }}>
-            <div style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              backgroundColor: customAlert.type === 'success' ? 'rgba(74, 222, 128, 0.15)' : 'rgba(248, 113, 113, 0.15)',
-              color: customAlert.type === 'success' ? '#4ade80' : '#f87171',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1rem auto',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}>
-              {customAlert.type === 'success' ? '✓' : '✕'}
-            </div>
-
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '0.4rem', color: themeColors.textMain }}>
-              {customAlert.type === 'success' ? 'Success' : 'Notice'}
-            </h3>
-            <p style={{ fontSize: '0.9rem', color: themeColors.textMuted, marginBottom: '1.5rem', lineHeight: '1.4' }}>
-              {customAlert.message}
-            </p>
-
-            <button 
-              onClick={() => setCustomAlert(null)}
-              style={{
-                width: '100%',
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                fontWeight: '600',
-                padding: '0.8rem',
-                borderRadius: '0.85rem',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.95rem',
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
-              }}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
       <style>{`
-        @keyframes tabFade {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes pageTransition {
+          0% { opacity: 0; transform: translateY(15px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
-        .tab-content-anim {
-          animation: tabFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .tab-slider-anim {
+          animation: pageTransition 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         @keyframes slideUp {
@@ -1185,9 +1138,9 @@ export default function Dashboard({ user, onLogout }) {
             width: '42px',
             height: '42px',
             borderRadius: '50%',
-            backgroundColor: themeColors.cardAltBg,
+            backgroundColor: '#1f2937',
             overflow: 'hidden',
-            border: `1px solid ${themeColors.border}`,
+            border: '1px solid #374151',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1198,8 +1151,8 @@ export default function Dashboard({ user, onLogout }) {
             {user.name.charAt(0)}
           </div>
           <div>
-            <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>Hello,</p>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: themeColors.textMain, margin: 0 }}>{user.name}</h1>
+            <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Hello,</p>
+            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{user.name}</h1>
           </div>
         </div>
 
@@ -1207,8 +1160,8 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => setShowDeveloperPage(true)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -1227,8 +1180,8 @@ export default function Dashboard({ user, onLogout }) {
           <button 
             onClick={() => setShowSettingsModal(true)}
             style={{
-              backgroundColor: themeColors.cardAltBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -1236,7 +1189,7 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: themeColors.textMain
+              color: '#ffffff'
             }}
             title="Settings"
           >
@@ -1245,15 +1198,15 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       </div>
 
-      <div className="tab-content-anim" style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}>
+      <div key={activeTab} className="tab-slider-anim" style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}>
         
         {activeTab === 'home' && (
           <>
             <div 
               onClick={() => setShowSummaryPage(true)}
               style={{
-                backgroundColor: themeColors.cardBg,
-                border: `1px solid ${themeColors.border}`,
+                backgroundColor: '#0a0a0a',
+                border: '1px solid #1f2937',
                 padding: '1.25rem',
                 borderRadius: '1.25rem',
                 marginBottom: '1.5rem',
@@ -1261,18 +1214,18 @@ export default function Dashboard({ user, onLogout }) {
                 cursor: 'pointer'
               }}
             >
-              <p style={{ color: themeColors.textMuted, fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: themeColors.textMain, textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>₹{netBalance.toFixed(2)}</p>
+              <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
+              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: '#ffffff', textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>₹{netBalance.toFixed(2)}</p>
               
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ backgroundColor: themeColors.cardAltBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${themeColors.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
                     <TrendingUp size={14} color="#4ade80" /> Cash In
                   </span>
                   <p style={{ fontWeight: 'bold', color: '#4ade80', fontSize: '0.9rem', margin: 0 }}>₹{totalCashIn.toFixed(2)}</p>
                 </div>
-                <div style={{ backgroundColor: themeColors.cardAltBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${themeColors.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
                     <TrendingDown size={14} color="#f87171" /> Cash Out
                   </span>
                   <p style={{ fontWeight: 'bold', color: '#f87171', fontSize: '0.9rem', margin: 0 }}>₹{totalCashOut.toFixed(2)}</p>
@@ -1281,12 +1234,12 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: themeColors.textMain }}>Recent Activity</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>Recent Activity</h3>
               <button 
                 onClick={() => setShowFilterPage(true)}
                 style={{
-                  backgroundColor: themeColors.cardAltBg,
-                  border: `1px solid ${themeColors.border}`,
+                  backgroundColor: '#121212',
+                  border: '1px solid #1f2937',
                   borderRadius: '50%',
                   width: '36px',
                   height: '36px',
@@ -1294,7 +1247,7 @@ export default function Dashboard({ user, onLogout }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: themeColors.textMuted
+                  color: '#9ca3af'
                 }}
                 title="Filter Activity"
               >
@@ -1303,7 +1256,7 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             {loadingTransactions ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: themeColors.textMuted }}>Loading database records...</div>
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>Loading database records...</div>
             ) : transactions.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {transactions
@@ -1339,21 +1292,50 @@ export default function Dashboard({ user, onLogout }) {
                   })
                   .map((txn) => (
                     <div key={txn._id} style={{
-                      backgroundColor: themeColors.cardBg,
-                      border: `1px solid ${themeColors.border}`,
+                      backgroundColor: '#0a0a0a',
+                      border: '1px solid #1f2937',
                       borderRadius: '1rem',
                       padding: '1rem',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}>
-                      <div>
-                        <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: '0 0 0.2rem 0', color: themeColors.textMain }}>{txn.description}</p>
-                        <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>{txn.category} • {new Date(txn.date).toLocaleDateString()}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '0.75rem',
+                          backgroundColor: 'rgba(74, 222, 128, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Wallet size={18} color="#4ade80" />
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: '0 0 0.2rem 0' }}>{txn.description}</p>
+                          <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: 0 }}>{txn.category} • {new Date(txn.date).toLocaleDateString()}</p>
+                        </div>
                       </div>
-                      <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#4ade80' : '#f87171' }}>
-                        {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
-                      </span>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#4ade80' : '#f87171' }}>
+                          {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
+                        </span>
+                        <button 
+                          onClick={() => handleDeleteTransaction(txn._id)}
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            color: '#6b7280',
+                            cursor: 'pointer',
+                            padding: '4px'
+                          }}
+                          title="Delete Record"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
               </div>
@@ -1367,11 +1349,11 @@ export default function Dashboard({ user, onLogout }) {
                 justifyContent: 'center',
                 flexGrow: 1
               }}>
-                <div style={{ marginBottom: '1rem', color: themeColors.textMain }}>
+                <div style={{ marginBottom: '1rem', color: '#ffffff' }}>
                   <Ghost size={64} strokeWidth={1.5} />
                 </div>
-                <p style={{ color: themeColors.textMain, fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Activity Yet</p>
-                <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
+                <p style={{ color: '#ffffff', fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Activity Yet</p>
+                <p style={{ fontSize: '0.75rem', color: '#6b7280', maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
                   Change filters or tap the "+" button below to add a new entry.
                 </p>
               </div>
@@ -1381,31 +1363,31 @@ export default function Dashboard({ user, onLogout }) {
 
         {activeTab === 'analysis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: themeColors.textMain }}>Insights & Analytics</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em' }}>Insights & Analytics</h2>
 
             <div 
               onClick={() => setShowSummaryPage(true)}
               style={{
-                backgroundColor: themeColors.cardBg,
-                border: `1px solid ${themeColors.border}`,
+                backgroundColor: '#0a0a0a',
+                border: '1px solid #1f2937',
                 padding: '1.25rem',
                 borderRadius: '1.25rem',
                 boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
                 cursor: 'pointer'
               }}
             >
-              <p style={{ color: themeColors.textMuted, fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: themeColors.textMain, textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>₹{netBalance.toFixed(2)}</p>
+              <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
+              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: '#ffffff', textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>₹{netBalance.toFixed(2)}</p>
               
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ backgroundColor: themeColors.cardAltBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${themeColors.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
                     <TrendingUp size={14} color="#4ade80" /> Cash In
                   </span>
                   <p style={{ fontWeight: 'bold', color: '#4ade80', fontSize: '0.9rem', margin: 0 }}>₹{totalCashIn.toFixed(2)}</p>
                 </div>
-                <div style={{ backgroundColor: themeColors.cardAltBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${themeColors.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: themeColors.textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
                     <TrendingDown size={14} color="#f87171" /> Cash Out
                   </span>
                   <p style={{ fontWeight: 'bold', color: '#f87171', fontSize: '0.9rem', margin: 0 }}>₹{totalCashOut.toFixed(2)}</p>
@@ -1414,22 +1396,22 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             <div style={{
-              backgroundColor: themeColors.cardBg,
-              border: `1px solid ${themeColors.border}`,
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #1f2937',
               padding: '1.25rem',
               borderRadius: '1.25rem',
               boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
             }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: themeColors.textMain }}>Weekly Spending Activity</h3>
-              <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: '0 0 1.5rem 0' }}>Tap any bar to see details</p>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '0 0 0.25rem 0' }}>Weekly Spending Activity</h3>
+              <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 1.5rem 0' }}>Tap any bar to see details</p>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '110px', paddingBottom: '0.5rem', borderBottom: `1px solid ${themeColors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '110px', paddingBottom: '0.5rem', borderBottom: '1px solid #1f2937' }}>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                   const dayAmt = weeklySpendingMap[day] || 0;
                   const maxAmt = Math.max(...Object.values(weeklySpendingMap), 1000);
                   const barHeight = dayAmt > 0 ? Math.min(Math.max((dayAmt / maxAmt) * 90, 15), 90) : 2;
                   const isSelected = selectedDay === day;
-                  const barColor = dayAmt > 0 ? '#f87171' : themeColors.border;
+                  const barColor = dayAmt > 0 ? '#f87171' : '#1f2937';
                   return (
                     <div 
                       key={day}
@@ -1450,7 +1432,7 @@ export default function Dashboard({ user, onLogout }) {
                         borderRadius: '4px',
                         transition: 'height 0.2s ease'
                       }}></div>
-                      <span style={{ fontSize: '0.7rem', color: isSelected ? themeColors.textMain : themeColors.textMuted, fontWeight: isSelected ? 'bold' : 'normal' }}>
+                      <span style={{ fontSize: '0.7rem', color: isSelected ? '#ffffff' : '#9ca3af', fontWeight: isSelected ? 'bold' : 'normal' }}>
                         {day}
                       </span>
                     </div>
@@ -1460,23 +1442,23 @@ export default function Dashboard({ user, onLogout }) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.5rem' }}>
                 <div>
-                  <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: '0 0 0.15rem 0' }}>Total Cash In</p>
+                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 0.15rem 0' }}>Total Cash In</p>
                   <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#4ade80', margin: 0 }}>₹{totalCashIn.toFixed(2)}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: '0 0 0.15rem 0' }}>Total Cash Out</p>
+                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 0.15rem 0' }}>Total Cash Out</p>
                   <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#f87171', margin: 0 }}>₹{totalCashOut.toFixed(2)}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: themeColors.textMain }}>Spending Overview</h3>
-              <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: '0 0 1rem 0' }}>Spending by Category</p>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 0.25rem 0' }}>Spending Overview</h3>
+              <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 1rem 0' }}>Spending by Category</p>
 
               <div style={{
-                backgroundColor: themeColors.cardBg,
-                border: `1px solid ${themeColors.border}`,
+                backgroundColor: '#0a0a0a',
+                border: '1px solid #1f2937',
                 borderRadius: '1.25rem',
                 padding: '1.25rem',
                 display: 'flex',
@@ -1485,13 +1467,13 @@ export default function Dashboard({ user, onLogout }) {
               }}>
                 {Object.keys(categorySpending).length > 0 ? (
                   Object.entries(categorySpending).map(([cat, amt]) => (
-                    <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${themeColors.border}`, paddingBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.9rem', color: themeColors.textMain, fontWeight: '600' }}>{cat}</span>
+                    <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1f2937', paddingBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: '600' }}>{cat}</span>
                       <span style={{ fontSize: '0.9rem', color: '#f87171', fontWeight: 'bold' }}>₹{amt}</span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ fontSize: '0.8rem', color: themeColors.textMuted, textAlign: 'center', margin: 0 }}>
+                  <p style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center', margin: 0 }}>
                     Add cash-out spending records to view category breakdown.
                   </p>
                 )}
@@ -1502,17 +1484,17 @@ export default function Dashboard({ user, onLogout }) {
 
         {activeTab === 'collection' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: themeColors.textMain }}>Collections & Vaults</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em' }}>Collections & Vaults</h2>
 
-            <div style={{ display: 'flex', backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '2rem', padding: '0.3rem' }}>
+            <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '2rem', padding: '0.3rem' }}>
               {['All', 'Prebuild', 'Owned'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setCollectionSubTab(tab)}
                   style={{
                     flex: 1,
-                    backgroundColor: collectionSubTab === tab ? themeColors.border : 'transparent',
-                    color: themeColors.textMain,
+                    backgroundColor: collectionSubTab === tab ? '#1f2937' : 'transparent',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: '1.75rem',
                     padding: '0.6rem',
@@ -1535,8 +1517,8 @@ export default function Dashboard({ user, onLogout }) {
                   const netCatBalance = catData.cashIn - catData.cashOut;
                   return (
                     <div key={index} style={{
-                      backgroundColor: themeColors.cardBg,
-                      border: `1px solid ${themeColors.border}`,
+                      backgroundColor: '#0a0a0a',
+                      border: '1px solid #1f2937',
                       borderRadius: '1.25rem',
                       padding: '1.25rem',
                       display: 'flex',
@@ -1557,8 +1539,8 @@ export default function Dashboard({ user, onLogout }) {
                           {item.icon || <Box size={20} color="#3b82f6" />}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: themeColors.textMain }}>{catName}</h4>
-                          <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>
+                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0' }}>{catName}</h4>
+                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>
                             {catData.count} records
                           </p>
                         </div>
@@ -1568,7 +1550,7 @@ export default function Dashboard({ user, onLogout }) {
                             <p style={{ fontSize: '0.65rem', color: '#f87171', margin: 0 }}>Out: ₹{catData.cashOut}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.7rem', color: themeColors.textMuted, margin: '0 0 0.1rem 0' }}>Remaining</p>
+                            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 0.1rem 0' }}>Remaining</p>
                             <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#4ade80' : '#f87171', margin: 0 }}>₹{netCatBalance.toFixed(2)}</p>
                           </div>
                         </div>
@@ -1578,7 +1560,7 @@ export default function Dashboard({ user, onLogout }) {
                           setEditingCollectionName(catName);
                           setShowEditCollectionPage(true);
                         }}
-                        style={{ backgroundColor: 'transparent', border: 'none', color: themeColors.textMuted, cursor: 'pointer' }}
+                        style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
                       >
                         <Edit3 size={16} />
                       </button>
@@ -1595,8 +1577,8 @@ export default function Dashboard({ user, onLogout }) {
                   const netCatBalance = catData.cashIn - catData.cashOut;
                   return (
                     <div key={index} style={{
-                      backgroundColor: themeColors.cardBg,
-                      border: `1px solid ${themeColors.border}`,
+                      backgroundColor: '#0a0a0a',
+                      border: '1px solid #1f2937',
                       borderRadius: '1.25rem',
                       padding: '1.25rem',
                       display: 'flex',
@@ -1617,8 +1599,8 @@ export default function Dashboard({ user, onLogout }) {
                           {item.icon}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: themeColors.textMain }}>{item.name}</h4>
-                          <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>
+                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0' }}>{item.name}</h4>
+                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>
                             {catData.count} records
                           </p>
                         </div>
@@ -1628,7 +1610,7 @@ export default function Dashboard({ user, onLogout }) {
                             <p style={{ fontSize: '0.65rem', color: '#f87171', margin: 0 }}>Out: ₹{catData.cashOut}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.7rem', color: themeColors.textMuted, margin: '0 0 0.1rem 0' }}>Remaining</p>
+                            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 0.1rem 0' }}>Remaining</p>
                             <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#4ade80' : '#f87171', margin: 0 }}>₹{netCatBalance.toFixed(2)}</p>
                           </div>
                         </div>
@@ -1638,7 +1620,7 @@ export default function Dashboard({ user, onLogout }) {
                           setEditingCollectionName(item.name);
                           setShowEditCollectionPage(true);
                         }}
-                        style={{ backgroundColor: 'transparent', border: 'none', color: themeColors.textMuted, cursor: 'pointer' }}
+                        style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
                       >
                         <Edit3 size={16} />
                       </button>
@@ -1656,8 +1638,8 @@ export default function Dashboard({ user, onLogout }) {
                     const netCatBalance = catData.cashIn - catData.cashOut;
                     return (
                       <div key={index} style={{
-                        backgroundColor: themeColors.cardBg,
-                        border: `1px solid ${themeColors.border}`,
+                        backgroundColor: '#0a0a0a',
+                        border: '1px solid #1f2937',
                         borderRadius: '1.25rem',
                         padding: '1.25rem',
                         display: 'flex',
@@ -1678,8 +1660,8 @@ export default function Dashboard({ user, onLogout }) {
                             <Box size={20} color={item.color || "#3b82f6"} />
                           </div>
                           <div>
-                            <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: themeColors.textMain }}>{item.name}</h4>
-                            <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>
+                            <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0' }}>{item.name}</h4>
+                            <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>
                               {catData.count} records
                             </p>
                           </div>
@@ -1689,7 +1671,7 @@ export default function Dashboard({ user, onLogout }) {
                               <p style={{ fontSize: '0.65rem', color: '#f87171', margin: 0 }}>Out: ₹{catData.cashOut}</p>
                             </div>
                             <div>
-                              <p style={{ fontSize: '0.7rem', color: themeColors.textMuted, margin: '0 0 0.1rem 0' }}>Remaining</p>
+                              <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 0.1rem 0' }}>Remaining</p>
                               <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#4ade80' : '#f87171', margin: 0 }}>₹{netCatBalance.toFixed(2)}</p>
                             </div>
                           </div>
@@ -1699,7 +1681,7 @@ export default function Dashboard({ user, onLogout }) {
                             setEditingCollectionName(item.name);
                             setShowEditCollectionPage(true);
                           }}
-                          style={{ backgroundColor: 'transparent', border: 'none', color: themeColors.textMuted, cursor: 'pointer' }}
+                          style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
                         >
                           <Edit3 size={16} />
                         </button>
@@ -1717,11 +1699,11 @@ export default function Dashboard({ user, onLogout }) {
                   justifyContent: 'center',
                   flexGrow: 1
                 }}>
-                  <div style={{ marginBottom: '1rem', color: themeColors.textMain }}>
+                  <div style={{ marginBottom: '1rem', color: '#ffffff' }}>
                     <Ghost size={64} strokeWidth={1.5} />
                   </div>
-                  <p style={{ color: themeColors.textMain, fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Custom Collections</p>
-                  <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
+                  <p style={{ color: '#ffffff', fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Custom Collections</p>
+                  <p style={{ fontSize: '0.75rem', color: '#6b7280', maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
                     Create custom collections with categories to analyze your spending efficiently.
                   </p>
                 </div>
@@ -1739,8 +1721,8 @@ export default function Dashboard({ user, onLogout }) {
         transform: 'translateX(-50%)',
         width: '90%',
         maxWidth: '380px',
-        backgroundColor: themeColors.cardBg,
-        border: `1px solid ${themeColors.border}`,
+        backgroundColor: '#0a0a0a',
+        border: '1px solid #1f2937',
         borderRadius: '2.5rem',
         padding: '0.5rem 0.75rem',
         display: 'flex',
@@ -1752,14 +1734,14 @@ export default function Dashboard({ user, onLogout }) {
         <button 
           onClick={() => setActiveTab('home')}
           style={{
-            background: activeTab === 'home' ? themeColors.border : 'transparent',
+            background: activeTab === 'home' ? '#1f2937' : 'transparent',
             border: 'none',
             borderRadius: '2rem',
             padding: '0.5rem 1rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.4rem',
-            color: activeTab === 'home' ? themeColors.textMain : themeColors.textMuted,
+            color: activeTab === 'home' ? '#ffffff' : '#9ca3af',
             cursor: 'pointer',
             fontSize: '0.75rem',
             fontWeight: '600',
@@ -1772,11 +1754,11 @@ export default function Dashboard({ user, onLogout }) {
         <button 
           onClick={() => setActiveTab('analysis')}
           style={{
-            background: activeTab === 'analysis' ? themeColors.border : 'transparent',
+            background: activeTab === 'analysis' ? '#1f2937' : 'transparent',
             border: 'none',
             borderRadius: '50%',
             padding: '0.6rem',
-            color: activeTab === 'analysis' ? themeColors.textMain : themeColors.textMuted,
+            color: activeTab === 'analysis' ? '#ffffff' : '#9ca3af',
             cursor: 'pointer',
             transition: 'all 0.3s ease'
           }}
@@ -1787,11 +1769,11 @@ export default function Dashboard({ user, onLogout }) {
         <button 
           onClick={() => setActiveTab('collection')}
           style={{
-            background: activeTab === 'collection' ? themeColors.border : 'transparent',
+            background: activeTab === 'collection' ? '#1f2937' : 'transparent',
             border: 'none',
             borderRadius: '50%',
             padding: '0.6rem',
-            color: activeTab === 'collection' ? themeColors.textMain : themeColors.textMuted,
+            color: activeTab === 'collection' ? '#ffffff' : '#9ca3af',
             cursor: 'pointer',
             transition: 'all 0.3s ease'
           }}
@@ -1802,8 +1784,8 @@ export default function Dashboard({ user, onLogout }) {
         <button 
           onClick={() => setShowAddEntryModal(true)}
           style={{
-            backgroundColor: isDarkMode ? '#ffffff' : '#0f172a',
-            color: isDarkMode ? '#000000' : '#ffffff',
+            backgroundColor: '#ffffff',
+            color: '#000000',
             border: 'none',
             borderRadius: '50%',
             width: '46px',
@@ -1812,7 +1794,7 @@ export default function Dashboard({ user, onLogout }) {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            boxShadow: '0 4px 12px rgba(255,255,255,0.2)'
           }}
         >
           <Plus size={24} />
@@ -1826,7 +1808,7 @@ export default function Dashboard({ user, onLogout }) {
           left: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: themeColors.bg,
+          backgroundColor: '#000000',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -1840,8 +1822,8 @@ export default function Dashboard({ user, onLogout }) {
             <button 
               onClick={() => setShowAddEntryModal(false)}
               style={{
-                backgroundColor: themeColors.cardAltBg,
-                border: `1px solid ${themeColors.border}`,
+                backgroundColor: '#121212',
+                border: '1px solid #262626',
                 borderRadius: '50%',
                 width: '40px',
                 height: '40px',
@@ -1849,7 +1831,7 @@ export default function Dashboard({ user, onLogout }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: themeColors.textMain
+                color: '#ffffff'
               }}
             >
               <X size={20} />
@@ -1870,19 +1852,19 @@ export default function Dashboard({ user, onLogout }) {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              backgroundColor: isDarkMode ? '#ffffff' : '#0f172a',
-              color: isDarkMode ? '#000000' : '#ffffff',
+              backgroundColor: '#ffffff',
+              color: '#000000',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '1.25rem',
-              boxShadow: '0 0 25px rgba(0,0,0,0.25)'
+              boxShadow: '0 0 25px rgba(255,255,255,0.25)'
             }}>
               <Plus size={36} strokeWidth={2.5} />
             </div>
 
-            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: themeColors.textMain, margin: '0 0 0.5rem 0' }}>Add New Entry</h3>
-            <p style={{ fontSize: '0.85rem', color: themeColors.textMuted, maxWidth: '280px', margin: '0 0 2rem 0', lineHeight: '1.4' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#ffffff', margin: '0 0 0.5rem 0' }}>Add New Entry</h3>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af', maxWidth: '280px', margin: '0 0 2rem 0', lineHeight: '1.4' }}>
               Create a new collection or add a spending entry.
             </p>
 
@@ -1899,8 +1881,8 @@ export default function Dashboard({ user, onLogout }) {
                   setShowAddRecordPage(true);
                 }}
                 style={{
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
+                  backgroundColor: '#0a0a0a',
+                  border: '1px solid #1f2937',
                   borderRadius: '1.25rem',
                   padding: '1.25rem 1rem',
                   display: 'flex',
@@ -1924,8 +1906,8 @@ export default function Dashboard({ user, onLogout }) {
                   <Receipt size={20} color="#4ade80" />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: themeColors.textMain, margin: '0 0 0.2rem 0' }}>Spending Record</h4>
-                  <p style={{ fontSize: '0.68rem', color: themeColors.textMuted, margin: 0, lineHeight: '1.2' }}>Add incoming or outgoing</p>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff', margin: '0 0 0.2rem 0' }}>Spending Record</h4>
+                  <p style={{ fontSize: '0.68rem', color: '#9ca3af', margin: 0, lineHeight: '1.2' }}>Add incoming or outgoing</p>
                 </div>
               </div>
 
@@ -1935,8 +1917,8 @@ export default function Dashboard({ user, onLogout }) {
                   setShowEditCollectionPage(true);
                 }}
                 style={{
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
+                  backgroundColor: '#0a0a0a',
+                  border: '1px solid #1f2937',
                   borderRadius: '1.25rem',
                   padding: '1.25rem 1rem',
                   display: 'flex',
@@ -1960,8 +1942,8 @@ export default function Dashboard({ user, onLogout }) {
                   <Folder size={20} color="#f43f5e" />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: themeColors.textMain, margin: '0 0 0.2rem 0' }}>Collection Category</h4>
-                  <p style={{ fontSize: '0.68rem', color: themeColors.textMuted, margin: 0, lineHeight: '1.2' }}>Organize into custom groups</p>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff', margin: '0 0 0.2rem 0' }}>Collection Category</h4>
+                  <p style={{ fontSize: '0.68rem', color: '#9ca3af', margin: 0, lineHeight: '1.2' }}>Organize into custom groups</p>
                 </div>
               </div>
             </div>
@@ -1972,12 +1954,12 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setShowAddEntryModal(false)}
               style={{
                 width: '100%',
-                backgroundColor: themeColors.cardBg,
-                color: themeColors.textMain,
+                backgroundColor: '#0a0a0a',
+                color: '#ffffff',
                 fontWeight: '600',
                 padding: '0.9rem 1rem',
                 borderRadius: '2.5rem',
-                border: `1px solid ${themeColors.border}`,
+                border: '1px solid #1f2937',
                 cursor: 'pointer',
                 fontSize: '0.95rem'
               }}
@@ -2007,10 +1989,10 @@ export default function Dashboard({ user, onLogout }) {
           <div 
             className="bottom-sheet-anim"
             style={{
-              backgroundColor: themeColors.cardAltBg,
+              backgroundColor: '#121212',
               borderTopLeftRadius: '2rem',
               borderTopRightRadius: '2rem',
-              padding: '1.5rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem',
+              padding: '1.5rem 1.25rem 2.5rem 1.25rem',
               width: '100%',
               maxWidth: '380px',
               marginInline: 'auto',
@@ -2022,38 +2004,14 @@ export default function Dashboard({ user, onLogout }) {
             <div style={{
               width: '40px',
               height: '4px',
-              backgroundColor: themeColors.border,
+              backgroundColor: '#374151',
               borderRadius: '2px',
               margin: '0 auto 1.25rem auto'
             }}></div>
 
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: themeColors.textMain, margin: '0 0 1.25rem 0' }}>Settings</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff', margin: '0 0 1.25rem 0' }}>Settings</h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div 
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '1rem',
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {isDarkMode ? <Moon size={20} color="#3b82f6" /> : <Sun size={20} color="#f59e0b" />}
-                  <div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: themeColors.textMain, margin: '0 0 0.15rem 0' }}>Theme Mode</h4>
-                    <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>{isDarkMode ? "Dark Theme Active" : "Light Theme Active"}</p>
-                  </div>
-                </div>
-                <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#3b82f6' }}>{isDarkMode ? "Switch Light" : "Switch Dark"}</span>
-              </div>
-
               <div 
                 onClick={onLogout}
                 style={{
@@ -2062,44 +2020,35 @@ export default function Dashboard({ user, onLogout }) {
                   gap: '1rem',
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
+                  backgroundColor: '#1a1a1a',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
               >
                 <LogOut size={20} color="#3b82f6" />
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: themeColors.textMain, margin: '0 0 0.15rem 0' }}>Sign Out</h4>
-                  <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>Safely close current finance database session</p>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff', margin: '0 0 0.15rem 0' }}>Sign Out</h4>
+                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Safely close current finance database session</p>
                 </div>
               </div>
 
               <div 
-                onClick={() => {
-                  const confirmDelete = window.confirm("Are you sure you want to permanently delete your account and all data?");
-                  if (confirmDelete) {
-                    setCustomAlert({ type: 'success', message: 'Account successfully deleted.' });
-                    onLogout();
-                  }
-                  setShowSettingsModal(false);
-                }}
+                onClick={handleDeleteAccount}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '1rem',
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
+                  backgroundColor: '#1a1a1a',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
               >
                 <Trash2 size={20} color="#f87171" />
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: themeColors.textMain, margin: '0 0 0.15rem 0' }}>Delete Account</h4>
-                  <p style={{ fontSize: '0.75rem', color: themeColors.textMuted, margin: 0 }}>Permanently erase all your data and collections</p>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#f87171', margin: '0 0 0.15rem 0' }}>Delete Account</h4>
+                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Permanently erase all your data and collections</p>
                 </div>
               </div>
             </div>
