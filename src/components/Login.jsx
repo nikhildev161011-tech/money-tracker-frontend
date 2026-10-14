@@ -1,94 +1,29 @@
 // Component: Login
-// Description: Clean authentication screen with theme support and direct robust PWA installation trigger.
+// Description: Premium authentication screen featuring realistic cash note drop animation, typewriter signature, and debugging console logs.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Onboarding from './Onboarding';
 
-export default function Login({ onLogin }) {
+export default function Login({ onGoogleLogin }) {
   const [showOnboarding, setShowOnboarding] = useState(true);
-  const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [customAlert, setCustomAlert] = useState(null);
-  
-  // Theme state defaulting to Light theme, synced with localStorage
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('money_tracker_theme');
-    return savedTheme ? savedTheme === 'dark' : false;
-  });
+  const [agreed, setAgreed] = useState(true);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    securityQuestion: 'What is your favourite month',
-    securityAnswer: ''
-  });
-  const [agreed, setAgreed] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState(null);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  // Direct PWA installation handler without requiring browser menu clicks
-  const handleInstallClick = async () => {
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-      setCustomAlert("Money Tracker is already installed and running as an app on your device!");
-      return;
-    }
-
-    if (installPrompt) {
-      installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setCustomAlert("App installation started successfully!");
-        setInstallPrompt(null);
-      } else {
-        setCustomAlert("App installation was cancelled.");
-      }
-    } else {
-      setCustomAlert("Direct install prompt is not currently available. Please ensure you are using a supported browser or check if the app is already installed.");
-    }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError('');
-  };
-
-  const handleSubmit = (e) => {
+  // Handle Google Sign-In trigger with debugging log
+  const handleGoogleClick = (e) => {
     e.preventDefault();
-    if (!agreed) return;
+    console.log("Google button was clicked successfully!");
 
-    if (formData.password.length < 6) {
-      setError('Password is too short! It must be at least 6 characters long.');
+    if (!agreed) {
+      setError('Please agree to the Terms & Conditions and Privacy Policy to continue.');
       return;
     }
-    if (formData.password.length > 15) {
-      setError('Password is too long! Maximum 15 characters are allowed.');
-      return;
+    setError('');
+    if (onGoogleLogin) {
+      onGoogleLogin();
+    } else {
+      console.error("onGoogleLogin prop is not passed to Login component!");
     }
-
-    onLogin(formData, isLogin);
-  };
-
-  const themeColors = {
-    bg: isDarkMode ? '#000000' : '#f8fafc',
-    cardBg: isDarkMode ? '#0c0c0e' : '#ffffff',
-    textMain: isDarkMode ? '#ffffff' : '#0f172a',
-    textMuted: isDarkMode ? '#9ca3af' : '#64748b',
-    border: isDarkMode ? '#222226' : '#e2e8f0',
-    modalBg: isDarkMode ? '#111115' : '#ffffff'
   };
 
   if (showOnboarding) {
@@ -99,8 +34,8 @@ export default function Login({ onLogin }) {
     <div style={{
       width: '100vw',
       minHeight: '100vh',
-      backgroundColor: themeColors.bg,
-      color: themeColors.textMain,
+      backgroundColor: '#000000',
+      color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -111,90 +46,73 @@ export default function Login({ onLogin }) {
       overflowX: 'hidden'
     }}>
       
-      {/* Centered Custom Popup Alert Modal */}
-      {customAlert && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999,
-          padding: '1rem'
-        }}>
-          <div style={{
-            width: '100%',
-            maxWidth: '310px',
-            backgroundColor: themeColors.modalBg,
-            border: `1px solid ${themeColors.border}`,
-            borderRadius: '1.25rem',
-            padding: '1.75rem 1.25rem',
-            textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
-            color: themeColors.textMain
-          }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '0.4rem', color: '#3b82f6' }}>
-              Money Tracker
-            </h3>
-            <p style={{ fontSize: '0.9rem', color: themeColors.textMuted, marginBottom: '1.5rem', lineHeight: '1.4' }}>
-              {customAlert}
-            </p>
-            <button 
-              onClick={() => setCustomAlert(null)}
-              style={{
-                width: '100%',
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                fontWeight: '600',
-                padding: '0.8rem',
-                borderRadius: '0.85rem',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.95rem'
-              }}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Styles for animations, custom inputs and checkbox */}
+      {/* Styles for realistic cash drop animation, permanent blue checkboxes, and typewriter effect */}
       <style>{`
-        @keyframes floatWallet {
-          0% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-8px) scale(1.05); }
-          100% { transform: translateY(0px) scale(1); }
+        @keyframes dropInCash {
+          0% { transform: translateY(-50px) rotate(-10deg) scale(0.7); opacity: 0; }
+          60% { transform: translateY(10px) rotate(3deg) scale(1.05); opacity: 1; }
+          100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 1; }
         }
-        .animated-wallet {
-          animation: floatWallet 3s ease-in-out infinite;
+        .animated-cash-note {
+          animation: dropInCash 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        .custom-input {
+        @keyframes floatNote {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .floating-cash-note {
+          animation: floatNote 3.5s ease-in-out infinite 1.2s;
+        }
+
+        /* Typewriter animation without blinking cursor line */
+        @keyframes typing {
+          0% { width: 0; }
+          70% { width: 100%; }
+          90% { width: 100%; }
+          100% { width: 0; }
+        }
+
+        .typewriter-text {
+          display: inline-block;
+          overflow: hidden;
+          white-space: nowrap;
+          border-right: none;
+          animation: typing 5s steps(32, end) infinite;
+        }
+
+        .google-btn {
           width: 100%;
-          background-color: ${themeColors.cardBg};
-          color: ${themeColors.textMain};
-          padding: 0.85rem 2.75rem 0.85rem 2.75rem;
+          background-color: #ffffff;
+          color: #000000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          padding: 0.9rem 1rem;
           border-radius: 0.85rem;
-          border: 1px solid ${themeColors.border};
+          border: none;
+          font-weight: 600;
           font-size: 0.95rem;
-          box-sizing: border-box;
+          cursor: pointer;
           transition: all 0.25s ease;
+          box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
         }
 
-        .custom-input:focus {
-          border-color: #2563eb;
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        .google-btn:hover {
+          background-color: #f4f4f5;
+          transform: translateY(-1px);
         }
 
-        .custom-input::placeholder {
-          color: ${themeColors.textMuted};
+        .google-btn:active {
+          transform: translateY(0);
+        }
+
+        .google-btn:disabled {
+          background-color: #27272a;
+          color: #71717a;
+          cursor: not-allowed;
+          box-shadow: none;
         }
 
         .checkbox-container {
@@ -216,10 +134,10 @@ export default function Login({ onLogin }) {
 
         .checkmark {
           position: relative;
-          height: 1.25rem;
-          width: 1.25rem;
-          background-color: ${themeColors.cardBg};
-          border: 2px solid #3b82f6;
+          height: 1.2rem;
+          width: 1.2rem;
+          background-color: #0c0c0e;
+          border: 2px solid #2563eb;
           border-radius: 0.35rem;
           transition: all 0.2s ease;
           flex-shrink: 0;
@@ -229,6 +147,7 @@ export default function Login({ onLogin }) {
         .checkbox-container input:checked ~ .checkmark {
           background-color: #2563eb;
           border-color: #2563eb;
+          transform: scale(1.05);
         }
 
         .checkmark:after {
@@ -242,8 +161,8 @@ export default function Login({ onLogin }) {
         }
 
         .checkbox-container .checkmark:after {
-          left: 7px;
-          top: 3px;
+          left: 6px;
+          top: 2px;
           width: 4px;
           height: 9px;
           border: solid white;
@@ -265,36 +184,42 @@ export default function Login({ onLogin }) {
         margin: 'auto 0'
       }}>
         
-        {/* Animated wallet icon */}
-        <div className="animated-wallet" style={{
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          filter: 'drop-shadow(0 15px 25px rgba(37, 99, 235, 0.35))'
-        }}>
-          <svg 
-            width="72" 
-            height="72" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="#2563eb" 
-            strokeWidth="1.75" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
-            <path d="M4 6v12a2 2 0 0 0 2 2h14v-4" />
-            <path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
-          </svg>
+        {/* Animated Realistic Currency Note Icon */}
+        <div className="animated-cash-note" style={{ marginBottom: '1.5rem' }}>
+          <div className="floating-cash-note" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '90px',
+            height: '64px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            border: '2px solid rgba(37, 99, 235, 0.4)',
+            filter: 'drop-shadow(0 15px 25px rgba(37, 99, 235, 0.35))'
+          }}>
+            <svg 
+              width="50" 
+              height="34" 
+              viewBox="0 0 24 16" 
+              fill="none" 
+              stroke="#2563eb" 
+              strokeWidth="1.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <rect x="1" y="1" width="22" height="14" rx="2" fill="rgba(37, 99, 235, 0.08)" />
+              <circle cx="12" cy="8" r="3" stroke="#2563eb" strokeWidth="1.5" fill="rgba(37, 99, 235, 0.2)" />
+              <path d="M4 5h2M4 11h2M18 5h2M18 11h2" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
         </div>
 
         {/* App title and subtitle */}
         <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.35rem', letterSpacing: '-0.025em' }}>
           Money Tracker
         </h1>
-        <p style={{ color: themeColors.textMuted, fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-          {isLogin ? "Welcome back! Please enter your details." : "Create your secure personal account."}
+        <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '2rem', lineHeight: '1.5' }}>
+          Securely manage your expenses with seamless Google authentication.
         </p>
 
         {/* Error message box */}
@@ -307,7 +232,7 @@ export default function Login({ onLogin }) {
             padding: '0.75rem 1rem',
             borderRadius: '0.75rem',
             fontSize: '0.82rem',
-            marginBottom: '1rem',
+            marginBottom: '1.25rem',
             textAlign: 'left',
             boxSizing: 'border-box'
           }}>
@@ -315,238 +240,60 @@ export default function Login({ onLogin }) {
           </div>
         )}
 
-        {/* Auth form */}
-        <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'left' }}>
+        {/* Authentication action wrapper */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
-          {/* Name field (Signup only) */}
-          {!isLogin && (
-            <div>
-              <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Full Name</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '14px', top: '14px', color: themeColors.textMuted, pointerEvents: 'none' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </span>
-                <input 
-                  type="text" 
-                  name="name" 
-                  placeholder="Enter your full name" 
-                  value={formData.name}
-                  onChange={handleChange}
-                  required={!isLogin}
-                  className="custom-input"
-                  style={{ paddingLeft: '2.75rem', paddingRight: '1rem' }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Email field */}
-          <div>
-            <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '14px', top: '14px', color: themeColors.textMuted, pointerEvents: 'none' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              </span>
-              <input 
-                type="email" 
-                name="email" 
-                placeholder="Enter your email" 
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="custom-input"
-                style={{ paddingLeft: '2.75rem', paddingRight: '1rem' }}
-              />
-            </div>
-          </div>
-
-          {/* Password field with show/hide toggle */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-              <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, fontWeight: '500' }}>Password</label>
-              <span style={{ fontSize: '0.7rem', color: themeColors.textMuted }}>6 to 15 characters</span>
-            </div>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '14px', top: '14px', color: themeColors.textMuted, pointerEvents: 'none' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              </span>
-              <input 
-                type={showPassword ? "text" : "password"} 
-                name="password" 
-                placeholder="Enter your password" 
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="custom-input"
-                style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '12px',
-                  background: 'none',
-                  border: 'none',
-                  color: themeColors.textMuted,
-                  cursor: 'pointer',
-                  padding: '2px'
-                }}
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Security question fields (Signup only) */}
-          {!isLogin && (
-            <>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Question (For Password Recovery)</label>
-                <div style={{
-                  width: '100%',
-                  backgroundColor: themeColors.cardBg,
-                  border: `1px solid ${themeColors.border}`,
-                  borderRadius: '0.85rem',
-                  padding: '0.85rem 1rem',
-                  color: themeColors.textMain,
-                  fontSize: '0.9rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  boxSizing: 'border-box'
-                }}>
-                  <span style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                  </span>
-                  <span>What is your favourite month?</span>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', color: themeColors.textMuted, display: 'block', marginBottom: '0.35rem', fontWeight: '500' }}>Security Answer</label>
-                <input 
-                  type="text" 
-                  name="securityAnswer" 
-                  placeholder="e.g., Enter your favourite month" 
-                  value={formData.securityAnswer}
-                  onChange={handleChange}
-                  required={!isLogin}
-                  className="custom-input"
-                  style={{ paddingLeft: '1rem', paddingRight: '1rem' }}
-                />
-              </div>
-            </>
-          )}
-
-          {/* Professional Animated Checkbox for Terms and Conditions */}
-          <div style={{ marginTop: '0.25rem' }}>
+          {/* Professional Checkbox with Permanent Blue Border */}
+          <div style={{ textAlign: 'left' }}>
             <label className="checkbox-container">
               <input 
                 type="checkbox" 
                 checked={agreed} 
-                onChange={(e) => setAgreed(e.target.checked)}
+                onChange={(e) => {
+                  setAgreed(e.target.checked);
+                  setError('');
+                }}
               />
               <span className="checkmark"></span>
-              <span style={{ fontSize: '0.75rem', color: themeColors.textMuted, lineHeight: '1.4' }}>
+              <span style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
                 By continuing, you agree to our <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Privacy Policy</a>.
               </span>
             </label>
           </div>
 
-          {/* Submit button */}
+          {/* Continue with Google Button */}
           <button 
-            type="submit"
+            type="button"
+            onClick={handleGoogleClick}
             disabled={!agreed}
-            style={{
-              width: '100%',
-              backgroundColor: agreed ? '#2563eb' : (isDarkMode ? '#18181b' : '#cbd5e1'),
-              color: agreed ? '#ffffff' : themeColors.textMuted,
-              fontWeight: '600',
-              padding: '0.9rem 1rem',
-              borderRadius: '0.85rem',
-              border: 'none',
-              cursor: agreed ? 'pointer' : 'not-allowed',
-              fontSize: '0.95rem',
-              marginTop: '0.5rem',
-              transition: 'all 0.2s ease',
-              boxShadow: agreed ? '0 4px 14px rgba(37, 99, 235, 0.35)' : 'none'
-            }}
+            className="google-btn"
           >
-            {isLogin ? "Sign In" : "Create Account"}
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.15C3.15 21.32 7.22 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.39-1.5-.39-2.24s.14-1.52.39-2.24V6.61H1.18C.43 8.13 0 9.87 0 12s.43 3.87 1.18 5.39l4.09-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.61l4.09 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
+            </svg>
+            Continue with Google
           </button>
 
-        </form>
-
-        {/* Toggle between login and signup */}
-        <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: themeColors.textMuted }}>
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-          <button 
-            onClick={() => setIsLogin(!isLogin)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#3b82f6',
-              fontWeight: '600',
-              cursor: 'pointer',
-              padding: 0,
-              fontSize: '0.85rem',
-              marginLeft: '0.25rem'
-            }}
-          >
-            {isLogin ? "Sign Up" : "Sign In"}
-          </button>
         </div>
 
-        {/* Direct PWA Download App Button */}
-        <button 
-          type="button"
-          onClick={handleInstallClick}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.6rem',
-            width: '100%',
-            maxWidth: '280px',
-            backgroundColor: themeColors.cardBg,
-            border: '1px solid #2563eb',
-            color: themeColors.textMain,
-            padding: '0.75rem 1rem',
-            borderRadius: '0.85rem',
-            fontSize: '0.85rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            marginTop: '1.75rem',
-            marginBottom: '0.75rem',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
-            boxSizing: 'border-box'
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          <span>Download Money Tracker App</span>
-        </button>
-
-        {/* Professional Developer signature update */}
+        {/* Developer signature with infinite typewriter animation */}
         <div style={{ 
-          marginTop: '0.5rem', 
+          marginTop: '3rem', 
           fontSize: '0.8rem', 
-          color: themeColors.textMuted,
-          letterSpacing: '0.05em',
-          fontWeight: '500'
+          color: '#9ca3af',
+          letterSpacing: '0.03em',
+          fontWeight: '500',
+          height: '24px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
         }}>
-          Secure Financial Vault • Engineered for Excellence
+          <div className="typewriter-text">
+            Designed & Developed by <span style={{ color: '#ffffff', fontWeight: '700' }}>Nikhil Gupta</span>
+          </div>
         </div>
 
       </div>
