@@ -1,8 +1,3 @@
-/**
- * Component: Dashboard (Part 1 of 3)
- * Description: Complete pure black dashboard with state management and database fetch logic.
- */
-
 import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, Ghost, Code, PieChart, Layers, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, Laptop, LogOut, Trash2, Check, Wallet, Film, Utensils, Car, Box, HeartPulse, Edit3, Plane, GraduationCap, ShoppingCart, Home as HomeIcon, Dumbbell, Briefcase, PlusCircle, X, Receipt, ChevronDown } from 'lucide-react';
 
@@ -33,6 +28,14 @@ export default function Dashboard({ user, onLogout }) {
   const [ownedCollections, setOwnedCollections] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage('');
+    }, 3000);
+  };
 
   useEffect(() => {
     if (user && user.id) {
@@ -56,7 +59,7 @@ export default function Dashboard({ user, onLogout }) {
 
   const handleSaveRecord = async () => {
     if (!recordDesc.trim() || !recordAmount) {
-      alert("Please enter description and amount.");
+      showToast("Please enter description and amount.");
       return;
     }
 
@@ -80,13 +83,14 @@ export default function Dashboard({ user, onLogout }) {
         setRecordDesc('');
         setRecordAmount('');
         setShowAddRecordPage(false);
+        showToast("Record added successfully");
         fetchTransactions();
       } else {
-        alert("Failed to add record.");
+        showToast("Failed to add record.");
       }
     } catch (error) {
       console.error("Error saving record:", error);
-      alert("Error connecting to backend server.");
+      showToast("Error connecting to backend server.");
     }
   };
 
@@ -97,9 +101,10 @@ export default function Dashboard({ user, onLogout }) {
       });
       const result = await response.json();
       if (result.success) {
+        showToast("Record deleted successfully");
         fetchTransactions();
       } else {
-        alert("Failed to delete transaction.");
+        showToast("Failed to delete transaction.");
       }
     } catch (error) {
       console.error("Error deleting transaction:", error);
@@ -111,19 +116,21 @@ export default function Dashboard({ user, onLogout }) {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com/api/users/${user.id}`, {
+      const response = await fetch(`https://money-tracker-backend-0bhm.onrender.com/api/users/delete/${user.id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
-        alert("Account permanently deleted.");
-        onLogout();
+        showToast("Account permanently deleted");
+        setTimeout(() => {
+          onLogout();
+        }, 1500);
       } else {
-        alert("Failed to delete account.");
+        showToast("Failed to delete account.");
       }
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("Error connecting to backend server.");
+      showToast("Error connecting to backend server.");
     }
   };
 
@@ -690,7 +697,7 @@ export default function Dashboard({ user, onLogout }) {
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Edit Collection</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Create Collection</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -720,6 +727,7 @@ export default function Dashboard({ user, onLogout }) {
                 placeholder="Enter Collection Name"
                 value={editingCollectionName}
                 onChange={(e) => setEditingCollectionName(e.target.value)}
+                maxLength={25}
                 style={{
                   backgroundColor: 'transparent',
                   border: 'none',
@@ -802,36 +810,28 @@ export default function Dashboard({ user, onLogout }) {
 
         <div style={{ display: 'flex', gap: '1rem', width: '100%', maxWidth: '380px', marginInline: 'auto', paddingTop: '1rem' }}>
           <button 
-            onClick={() => {
-              setOwnedCollections(prev => prev.filter(item => item.name !== editingCollectionName));
-              alert("Collection deleted successfully.");
-              setShowEditCollectionPage(false);
-            }}
+            onClick={() => setShowEditCollectionPage(false)}
             style={{
               flex: 1,
               backgroundColor: '#0a0a0a',
-              color: '#f87171',
+              color: '#ffffff',
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: '1px solid rgba(248, 113, 113, 0.3)',
+              border: '1px solid #1f2937',
               cursor: 'pointer',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.4rem'
+              fontSize: '0.95rem'
             }}
           >
-            <Trash2 size={16} /> Delete
+            Cancel
           </button>
 
           <button 
             onClick={() => {
               if (editingCollectionName.trim() !== '') {
-                setOwnedCollections([{ name: editingCollectionName, color: selectedColor, icon: selectedIcon }]);
+                setOwnedCollections(prev => [...prev, { name: editingCollectionName, color: selectedColor, icon: selectedIcon }]);
+                showToast("Collection created successfully");
               }
-              alert("Changes saved successfully!");
               setShowEditCollectionPage(false);
             }}
             style={{
@@ -847,7 +847,7 @@ export default function Dashboard({ user, onLogout }) {
               boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
             }}
           >
-            Save Changes
+            Create
           </button>
         </div>
       </div>
@@ -1130,7 +1130,42 @@ export default function Dashboard({ user, onLogout }) {
         .bottom-sheet-anim {
           animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        @keyframes toastFade {
+          0% { opacity: 0; transform: translateY(20px) translateX(-50%); }
+          15% { opacity: 1; transform: translateY(0) translateX(-50%); }
+          85% { opacity: 1; transform: translateY(0) translateX(-50%); }
+          100% { opacity: 0; transform: translateY(20px) translateX(-50%); }
+        }
+        .toast-popup {
+          animation: toastFade 3s ease-in-out forwards;
+        }
       `}</style>
+
+      {toastMessage && (
+        <div className="toast-popup" style={{
+          position: 'fixed',
+          bottom: '5.5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#121212',
+          color: '#ffffff',
+          border: '1px solid #27272a',
+          padding: '0.75rem 1.25rem',
+          borderRadius: '9999px',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
+          zIndex: 1000,
+          whiteSpace: 'nowrap'
+        }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
+          {toastMessage}
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%', maxWidth: '380px', marginInline: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
