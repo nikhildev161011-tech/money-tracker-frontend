@@ -3,6 +3,10 @@ import { Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, Ghos
 
 export default function Dashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('home');
+  const [slideDirection, setSlideDirection] = useState('right');
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
+
   const [showDeveloperPage, setShowDeveloperPage] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSummaryPage, setShowSummaryPage] = useState(false);
@@ -29,6 +33,56 @@ export default function Dashboard({ user, onLogout }) {
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
+
+  const tabList = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'analysis', label: 'Analysis', icon: BarChart2 },
+    { id: 'collection', label: 'Vaults', icon: Folder }
+  ];
+
+  const handleTabSwitch = (newTabId) => {
+    const tabOrder = ['home', 'analysis', 'collection'];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    const nextIndex = tabOrder.indexOf(newTabId);
+
+    if (nextIndex > currentIndex) {
+      setSlideDirection('right');
+    } else if (nextIndex < currentIndex) {
+      setSlideDirection('left');
+    }
+    setActiveTab(newTabId);
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const deltaX = touchStartX - touchEndX;
+    const deltaY = touchStartY - touchEndY;
+
+    // Trigger swipe only when horizontal gesture is dominant
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+      const tabOrder = ['home', 'analysis', 'collection'];
+      const currentIndex = tabOrder.indexOf(activeTab);
+
+      if (deltaX > 0 && currentIndex < tabOrder.length - 1) {
+        setSlideDirection('right');
+        setActiveTab(tabOrder[currentIndex + 1]);
+      } else if (deltaX < 0 && currentIndex > 0) {
+        setSlideDirection('left');
+        setActiveTab(tabOrder[currentIndex - 1]);
+      }
+    }
+
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -195,6 +249,8 @@ export default function Dashboard({ user, onLogout }) {
   }));
 
   const categoriesList = [...prebuiltCategories, ...ownedCategoriesList];
+  const activeTabIndex = Math.max(0, tabList.findIndex(t => t.id === activeTab));
+
   if (showDeveloperPage) {
     return (
       <div style={{
@@ -211,6 +267,9 @@ export default function Dashboard({ user, onLogout }) {
         overflowX: 'hidden'
       }}>
         <style>{`
+          * {
+            -webkit-tap-highlight-color: transparent !important;
+          }
           @keyframes pulseGlow {
             0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
@@ -346,6 +405,9 @@ export default function Dashboard({ user, onLogout }) {
         position: 'relative'
       }}>
         <style>{`
+          * {
+            -webkit-tap-highlight-color: transparent !important;
+          }
           input[type=number]::-webkit-inner-spin-button, 
           input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -675,6 +737,9 @@ export default function Dashboard({ user, onLogout }) {
         overflowX: 'hidden'
       }}>
         <style>{`
+          * {
+            -webkit-tap-highlight-color: transparent !important;
+          }
           ::-webkit-scrollbar {
             display: none;
           }
@@ -853,6 +918,7 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   if (showSummaryPage) {
     return (
       <div style={{
@@ -868,6 +934,11 @@ export default function Dashboard({ user, onLogout }) {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         overflowX: 'hidden'
       }}>
+        <style>{`
+          * {
+            -webkit-tap-highlight-color: transparent !important;
+          }
+        `}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1.5rem' }}>
           <button 
             onClick={() => setShowSummaryPage(false)}
@@ -957,6 +1028,11 @@ export default function Dashboard({ user, onLogout }) {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         overflowX: 'hidden'
       }}>
+        <style>{`
+          * {
+            -webkit-tap-highlight-color: transparent !important;
+          }
+        `}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1.5rem' }}>
           <button 
             onClick={() => setShowFilterPage(false)}
@@ -1108,19 +1184,46 @@ export default function Dashboard({ user, onLogout }) {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      padding: '1.25rem 1.25rem 6rem 1.25rem',
+      padding: '1.25rem 1.25rem 6.5rem 1.25rem',
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden',
       position: 'relative'
     }}>
       <style>{`
-        @keyframes pageTransition {
-          0% { opacity: 0; transform: translateY(15px); }
-          100% { opacity: 1; transform: translateY(0); }
+        * {
+          -webkit-tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none;
         }
-        .tab-slider-anim {
-          animation: pageTransition 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        button, a, input {
+          -webkit-tap-highlight-color: transparent !important;
+          outline: none !important;
+        }
+        button:focus, button:focus-visible, button:active {
+          outline: none !important;
+          box-shadow: none;
+        }
+
+        @keyframes slideFromRight {
+          0% { opacity: 0; transform: translateX(24px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideFromLeft {
+          0% { opacity: 0; transform: translateX(-24px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        .tab-slide-right {
+          animation: slideFromRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .tab-slide-left {
+          animation: slideFromLeft 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .nav-tab-btn:active {
+          transform: scale(0.92);
+        }
+        .plus-action-btn:active {
+          transform: scale(0.9);
         }
 
         @keyframes slideUp {
@@ -1233,7 +1336,13 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       </div>
 
-      <div key={activeTab} className="tab-slider-anim" style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}>
+      <div 
+        key={activeTab} 
+        className={slideDirection === 'right' ? 'tab-slide-right' : 'tab-slide-left'}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}
+      >
         
         {activeTab === 'home' && (
           <>
@@ -1749,6 +1858,7 @@ export default function Dashboard({ user, onLogout }) {
 
       </div>
 
+      {/* Floating Animated Bottom Navigation Bar */}
       <div style={{
         position: 'fixed',
         bottom: '1.25rem',
@@ -1759,63 +1869,84 @@ export default function Dashboard({ user, onLogout }) {
         backgroundColor: '#0a0a0a',
         border: '1px solid #1f2937',
         borderRadius: '2.5rem',
-        padding: '0.5rem 0.75rem',
+        padding: '0.35rem 0.5rem',
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'space-between',
         boxShadow: '0 20px 30px rgba(0,0,0,0.8)',
-        zIndex: 10
+        zIndex: 10,
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)'
       }}>
-        <button 
-          onClick={() => setActiveTab('home')}
-          style={{
-            background: activeTab === 'home' ? '#1f2937' : 'transparent',
-            border: 'none',
-            borderRadius: '2rem',
-            padding: '0.5rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            color: activeTab === 'home' ? '#ffffff' : '#9ca3af',
-            cursor: 'pointer',
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <Home size={18} /> Home
-        </button>
+        {/* Animated Sliding Segmented Tabs */}
+        <div style={{
+          position: 'relative',
+          display: 'flex',
+          flex: 1,
+          backgroundColor: '#121212',
+          borderRadius: '2rem',
+          padding: '3px',
+          marginRight: '0.5rem',
+          border: '1px solid #1f2937',
+          alignItems: 'center'
+        }}>
+          {/* Smooth Sliding Pill Indicator */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '3px',
+              bottom: '3px',
+              left: '3px',
+              width: 'calc((100% - 6px) / 3)',
+              transform: `translateX(${activeTabIndex * 100}%)`,
+              backgroundColor: '#1f2937',
+              border: '1px solid #374151',
+              borderRadius: '1.75rem',
+              transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+              pointerEvents: 'none',
+              zIndex: 1,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+            }}
+          />
 
-        <button 
-          onClick={() => setActiveTab('analysis')}
-          style={{
-            background: activeTab === 'analysis' ? '#1f2937' : 'transparent',
-            border: 'none',
-            borderRadius: '50%',
-            padding: '0.6rem',
-            color: activeTab === 'analysis' ? '#ffffff' : '#9ca3af',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <BarChart2 size={20} />
-        </button>
+          {tabList.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabSwitch(tab.id)}
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.55rem 0.2rem',
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '1.75rem',
+                  color: isActive ? '#ffffff' : '#9ca3af',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: isActive ? '700' : '500',
+                  transition: 'color 0.25s ease, transform 0.15s ease',
+                  WebkitTapHighlightColor: 'transparent',
+                  outline: 'none',
+                  userSelect: 'none'
+                }}
+                className="nav-tab-btn"
+              >
+                <IconComponent size={17} color={isActive ? '#ffffff' : '#9ca3af'} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        <button 
-          onClick={() => setActiveTab('collection')}
-          style={{
-            background: activeTab === 'collection' ? '#1f2937' : 'transparent',
-            border: 'none',
-            borderRadius: '50%',
-            padding: '0.6rem',
-            color: activeTab === 'collection' ? '#ffffff' : '#9ca3af',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <Folder size={20} />
-        </button>
-
+        {/* Action Button */}
         <button 
           onClick={() => setShowAddEntryModal(true)}
           style={{
@@ -1823,16 +1954,21 @@ export default function Dashboard({ user, onLogout }) {
             color: '#000000',
             border: 'none',
             borderRadius: '50%',
-            width: '46px',
-            height: '46px',
+            width: '42px',
+            height: '42px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(255,255,255,0.2)'
+            boxShadow: '0 4px 14px rgba(255,255,255,0.25)',
+            flexShrink: 0,
+            transition: 'transform 0.15s ease',
+            WebkitTapHighlightColor: 'transparent',
+            outline: 'none'
           }}
+          className="plus-action-btn"
         >
-          <Plus size={24} />
+          <Plus size={22} strokeWidth={2.5} />
         </button>
       </div>
 
