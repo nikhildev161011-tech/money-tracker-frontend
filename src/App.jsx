@@ -1,133 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from './firebase';
 import Splash from './components/Splash';
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import ChatList from './components/ChatList';
 
-function App() {
-  const [isSplash, setIsSplash] = useState(true);
-  const [user, setUser] = useState(null);
+export default function App() {
+  const [currentStep, setCurrentStep] = useState('splash');
+  const [userData, setUserData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      name: '',
+      phone: '',
+      avatar: '',
+      about: 'Hey there! I am using Vortex.'
+    };
+  });
 
-  // Handle splash screen timer
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsSplash(false);
-    }, 2000);
-    return () => clearTimeout(timer);
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+          console.log('Service worker registered successfully:', reg);
+        }).catch((err) => {
+          console.log('Service worker registration failed:', err);
+        });
+      });
+    }
   }, []);
 
-  // Check for persisted user session in localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('moneyTrackerUser');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse stored user data:", error);
-        localStorage.removeItem('moneyTrackerUser');
-      }
+    if (userData && userData.phone) {
+      localStorage.setItem('user', JSON.stringify(userData));
     }
-  }, []);
+  }, [userData]);
 
-  // Handle standard email/password authentication (Login & Register)
-  const handleAuth = async (formData, isLogin) => {
-    const endpoint = isLogin 
-      ? 'https://money-tracker-backend-0bhm.onrender.com/api/auth/login' 
-      : 'https://money-tracker-backend-0bhm.onrender.com/api/auth/register';
+  useEffect(() => {
+    if (currentStep === 'splash') {
+      const timer = setTimeout(() => {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            const parsed = JSON.parse(savedUser);
+            if (parsed && parsed.phone) {
+              setCurrentStep('chatlist');
+              return;
+            }
+          } catch (e) {}
+        }
+        setCurrentStep('login');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
 
+  const handleLoginComplete = (data) => {
+    const updated = { ...userData, ...data };
+    setUserData(updated);
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        const userData = {
-          id: result.user.id,
-          name: result.user.name,
-          email: result.user.email
-        };
-        setUser(userData);
-        localStorage.setItem('moneyTrackerUser', JSON.stringify(userData));
-      } else {
-        alert(result.message || "Authentication failed. Please check your credentials.");
-      }
-    } catch (error) {
-      console.error("Authentication Error:", error);
-      alert("Unable to connect to the backend server. Please ensure the server is running.");
-    }
+      localStorage.setItem('user', JSON.stringify(updated));
+    } catch (e) {}
+    setCurrentStep('chatlist');
   };
 
-  // Handle Google Sign-In authentication via Firebase popup and backend synchronization
-  const handleGoogleLogin = async () => {
+  const handleUpdateUser = (newData) => {
+    setUserData(newData);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const loggedInUser = result.user;
-      const token = await loggedInUser.getIdToken();
-
-      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      const resultData = await response.json();
-
-      if (resultData.success) {
-        const userData = {
-          id: resultData.user.id,
-          name: resultData.user.name,
-          email: resultData.user.email
-        };
-        setUser(userData);
-        localStorage.setItem('moneyTrackerUser', JSON.stringify(userData));
-      } else {
-        alert(resultData.message || "Google authentication failed.");
-      }
-    } catch (error) {
-      console.error("Google Authentication Error:", error);
-      alert("Unable to connect to backend for Google authentication.");
-    }
+      localStorage.setItem('user', JSON.stringify(newData));
+    } catch (e) {}
   };
 
-  // Handle user logout and clear session
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('moneyTrackerUser');
+    localStorage.removeItem('user');
+    setUserData({
+      name: '',
+      phone: '',
+      avatar: '',
+      about: 'Hey there! I am using Vortex.'
+    });
+    setCurrentStep('login');
   };
 
-  if (isSplash) {
+  if (currentStep === 'splash') {
     return <Splash />;
   }
 
-  return (
-    <div style={{
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#ffffff',
-      display: 'flex',
-      flexDirection: 'column',
-      boxSizing: 'border-box',
-      margin: 0,
-      padding: 0,
-      overflowX: 'hidden'
-    }}>
-      {!user ? (
-        <Login onLogin={handleAuth} onGoogleLogin={handleGoogleLogin} />
-      ) : (
-        <Dashboard user={user} onLogout={handleLogout} />
-      )}
-    </div>
-  );
-}
+  if (currentStep === 'login') {
+    return <Login onLoginComplete={handleLoginComplete} />;
+  }
 
-export default App;
+  if (currentStep === 'chatlist') {
+    return <ChatList userData={userData} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />;
+  }
+
+  return null;
+}
