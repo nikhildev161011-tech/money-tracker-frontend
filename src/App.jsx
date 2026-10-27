@@ -1,79 +1,124 @@
 import React, { useState, useEffect } from 'react';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from './firebase';
 import Splash from './components/Splash';
+import Onboarding from './components/Onboarding';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 
-export default function App() {
-  const [currentStep, setCurrentStep] = useState('splash');
-  
-  // Save user object securely in state & localStorage
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('moneyTrackerUser');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      id: 'default_user_161011', // fallback unique ID for backend transactions
-      name: 'Nikhil Gupta'
-    };
-  });
+function App() {
+  const [isSplash, setIsSplash] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // PWA Service Worker Registration
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then((reg) => {
-          console.log('Service worker registered successfully:', reg);
-        }).catch((err) => {
-          console.log('Service worker registration failed:', err);
-        });
-      });
+    const storedUser = localStorage.getItem('moneyTrackerUser');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse stored user data:", error);
+        localStorage.removeItem('moneyTrackerUser');
+      }
     }
   }, []);
 
-  // Splash screen timer logic
-  useEffect(() => {
-    if (currentStep === 'splash') {
-      const timer = setTimeout(() => {
-        const isAuth = localStorage.getItem('isAuth') === 'true';
-        if (isAuth) {
-          setCurrentStep('dashboard');
-        } else {
-          setCurrentStep('login');
-        }
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep]);
+  const handleAuth = async (formData, isLogin) => {
+    const endpoint = isLogin 
+      ? 'https://money-tracker-backend-0bhm.onrender.com/api/auth/login' 
+      : 'https://money-tracker-backend-0bhm.onrender.com/api/auth/register';
 
-  const handleGoogleLogin = () => {
-    const loggedInUser = {
-      id: 'user_' + Date.now(), // Generate unique backend user ID
-      name: 'Nikhil Gupta'
-    };
-    setUser(loggedInUser);
     try {
-      localStorage.setItem('isAuth', 'true');
-      localStorage.setItem('moneyTrackerUser', JSON.stringify(loggedInUser));
-    } catch (e) {}
-    setCurrentStep('dashboard');
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const userData = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email
+        };
+        setUser(userData);
+        localStorage.setItem('moneyTrackerUser', JSON.stringify(userData));
+      } else {
+        alert(result.message || "Authentication failed. Please check your credentials.");
+      }
+    } catch (error) {
+      console.error("Authentication Error:", error);
+      alert("Unable to connect to the backend server.");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const loggedInUser = result.user;
+      const token = await loggedInUser.getIdToken();
+
+      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const resultData = await response.json();
+
+      if (resultData.success) {
+        const userData = {
+          id: resultData.user.id,
+          name: resultData.user.name,
+          email: resultData.user.email
+        };
+        setUser(userData);
+        localStorage.setItem('moneyTrackerUser', JSON.stringify(userData));
+      } else {
+        alert(resultData.message || "Google authentication failed.");
+      }
+    } catch (error) {
+      console.error("Google Authentication Error:", error);
+      alert("Unable to connect to backend for Google authentication.");
+    }
   };
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('isAuth');
-      localStorage.removeItem('moneyTrackerUser');
-    } catch (e) {}
-    setCurrentStep('login');
+    setUser(null);
+    localStorage.removeItem('moneyTrackerUser');
   };
 
-  if (currentStep === 'splash') {
-    return <Splash />;
+  const handleFinishOnboarding = () => {
+    setHasSeenOnboarding(true);
+  };
+
+  if (isSplash) {
+    return <Splash onFinish={() => setIsSplash(false)} />;
   }
 
-  if (currentStep === 'login') {
-    return <Login onGoogleLogin={handleGoogleLogin} />;
+  if (user) {
+    return (
+      <div style={{ width: '100vw', minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', margin: 0, padding: 0, overflowX: 'hidden' }}>
+        <Dashboard user={user} onLogout={handleLogout} />
+      </div>
+    );
   }
 
-  return <Dashboard user={user} onLogout={handleLogout} />;
+  if (!hasSeenOnboarding) {
+    return <Onboarding onFinish={handleFinishOnboarding} />;
+  }
+
+  return (
+    <div style={{ width: '100vw', minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', margin: 0, padding: 0, overflowX: 'hidden' }}>
+      <Login onLogin={handleAuth} onGoogleLogin={handleGoogleLogin} />
+    </div>
+  );
 }
+
+export default App;
