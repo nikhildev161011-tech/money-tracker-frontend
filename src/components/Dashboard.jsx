@@ -1,7 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, Ghost, Code, PieChart, Layers, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, Laptop, LogOut, Trash2, Check, Wallet, Film, Utensils, Car, Box, HeartPulse, Edit3, Plane, GraduationCap, ShoppingCart, Home as HomeIcon, Dumbbell, Briefcase, PlusCircle, X, Receipt, ChevronDown } from 'lucide-react';
+import { 
+  Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, 
+  Ghost, Code, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, 
+  Laptop, LogOut, Trash2, Check, Wallet, Edit3, Plane, 
+  GraduationCap, ShoppingCart, Home as HomeIcon, Dumbbell, Briefcase, 
+  X, Receipt, ChevronDown, Sun, Moon, Landmark, Gamepad2, 
+  UtensilsCrossed, CarFront, Sparkles, HeartPulse, Box
+} from 'lucide-react';
+
+// Smooth Count-Up Animation Component
+function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 }) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const endVal = Number(value) || 0;
+    const startTime = performance.now();
+    let frameId;
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutCubic curve for smooth natural deceleration
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const current = endVal * easeProgress;
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate);
+      } else {
+        setDisplayValue(endVal);
+      }
+    };
+
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [value, duration]);
+
+  const isNeg = displayValue < 0;
+  const absFormatted = Math.abs(displayValue).toLocaleString('en-IN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+
+  return (
+    <span>
+      {isNeg ? `-${prefix}${absFormatted}` : `${prefix}${absFormatted}`}
+    </span>
+  );
+}
 
 export default function Dashboard({ user, onLogout }) {
+  // Theme State (Persisted in localStorage for PWA and Browser Refresh)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('app_theme') || 'dark';
+  });
+
+  const isDark = theme === 'dark';
+
+  const toggleTheme = () => {
+    const nextTheme = isDark ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('app_theme', nextTheme);
+    showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`);
+  };
+
+  // Color tokens responsive to both Dark & Light themes
+  const t = {
+    bg: isDark ? '#000000' : '#f8fafc',
+    cardBg: isDark ? '#0a0a0a' : '#ffffff',
+    secondaryCardBg: isDark ? '#121212' : '#f1f5f9',
+    border: isDark ? '#1f2937' : '#e2e8f0',
+    borderSecondary: isDark ? '#262626' : '#cbd5e1',
+    text: isDark ? '#ffffff' : '#0f172a',
+    textSecondary: isDark ? '#9ca3af' : '#64748b',
+    textMuted: isDark ? '#6b7280' : '#94a3b8',
+    pillContainer: isDark ? '#121212' : '#e2e8f0',
+    pillActive: isDark ? '#1f2937' : '#ffffff',
+    pillBorder: isDark ? '#374151' : '#cbd5e1',
+    bottomNavBg: isDark ? '#0a0a0a' : '#ffffff',
+    bottomNavBorder: isDark ? '#1f2937' : '#e2e8f0',
+    bottomNavShadow: isDark ? '0 20px 30px rgba(0,0,0,0.85)' : '0 20px 35px rgba(0,0,0,0.12)',
+    actionBtnBg: isDark ? '#ffffff' : '#0f172a',
+    actionBtnColor: isDark ? '#000000' : '#ffffff',
+    shadow: isDark ? '0 10px 25px -5px rgba(0, 0, 0, 0.5)' : '0 10px 25px -5px rgba(0, 0, 0, 0.08)',
+  };
+
   const [activeTab, setActiveTab] = useState('home');
   const [slideDirection, setSlideDirection] = useState('right');
   const [touchStartX, setTouchStartX] = useState(null);
@@ -66,7 +149,6 @@ export default function Dashboard({ user, onLogout }) {
     const deltaX = touchStartX - touchEndX;
     const deltaY = touchStartY - touchEndY;
 
-    // Trigger swipe only when horizontal gesture is dominant
     if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       const tabOrder = ['home', 'analysis', 'collection'];
       const currentIndex = tabOrder.indexOf(activeTab);
@@ -232,32 +314,74 @@ export default function Dashboard({ user, onLogout }) {
   const [timeFilter, setTimeFilter] = useState('All');
   const [selectedDay, setSelectedDay] = useState('Sun');
 
+  // Realistic, modern & colorful category icons comfortable on both Dark & Light themes
   const prebuiltCategories = [
-    { name: 'Salary & Income', type: 'Prebuild', icon: <Wallet size={16} color="#4ade80" />, color: 'rgba(74, 222, 128, 0.15)' },
-    { name: 'Entertainment & Leisure', type: 'Prebuild', icon: <Film size={16} color="#c084fc" />, color: 'rgba(192, 132, 252, 0.15)' },
-    { name: 'Food & Dining', type: 'Prebuild', icon: <Utensils size={16} color="#fbbf24" />, color: 'rgba(251, 191, 36, 0.15)' },
-    { name: 'Transport & Logistics', type: 'Prebuild', icon: <Car size={16} color="#60a5fa" />, color: 'rgba(96, 165, 250, 0.15)' },
-    { name: 'General', type: 'Prebuild', icon: <Box size={16} color="#818cf8" />, color: 'rgba(129, 140, 248, 0.15)' },
-    { name: 'Health & Care', type: 'Prebuild', icon: <HeartPulse size={16} color="#f43f5e" />, color: 'rgba(244, 63, 94, 0.15)' }
+    { 
+      name: 'Salary & Income', 
+      type: 'Prebuild', 
+      icon: <Landmark size={18} color="#10b981" />, 
+      color: 'rgba(16, 185, 129, 0.16)', 
+      borderColor: 'rgba(16, 185, 129, 0.35)' 
+    },
+    { 
+      name: 'Entertainment & Leisure', 
+      type: 'Prebuild', 
+      icon: <Gamepad2 size={18} color="#a855f7" />, 
+      color: 'rgba(168, 85, 247, 0.16)', 
+      borderColor: 'rgba(168, 85, 247, 0.35)' 
+    },
+    { 
+      name: 'Food & Dining', 
+      type: 'Prebuild', 
+      icon: <UtensilsCrossed size={18} color="#f59e0b" />, 
+      color: 'rgba(245, 158, 11, 0.16)', 
+      borderColor: 'rgba(245, 158, 11, 0.35)' 
+    },
+    { 
+      name: 'Transport & Logistics', 
+      type: 'Prebuild', 
+      icon: <CarFront size={18} color="#3b82f6" />, 
+      color: 'rgba(59, 130, 246, 0.16)', 
+      borderColor: 'rgba(59, 130, 246, 0.35)' 
+    },
+    { 
+      name: 'General', 
+      type: 'Prebuild', 
+      icon: <Sparkles size={18} color="#6366f1" />, 
+      color: 'rgba(99, 102, 241, 0.16)', 
+      borderColor: 'rgba(99, 102, 241, 0.35)' 
+    },
+    { 
+      name: 'Health & Care', 
+      type: 'Prebuild', 
+      icon: <HeartPulse size={18} color="#f43f5e" />, 
+      color: 'rgba(244, 63, 94, 0.16)', 
+      borderColor: 'rgba(244, 63, 94, 0.35)' 
+    }
   ];
 
   const ownedCategoriesList = ownedCollections.map(item => ({
     name: item.name,
     type: 'Owned',
-    icon: <Box size={16} color={item.color || "#3b82f6"} />,
-    color: 'rgba(59, 130, 246, 0.15)'
+    icon: <Box size={18} color={item.color || "#3b82f6"} />,
+    color: 'rgba(59, 130, 246, 0.16)',
+    borderColor: 'rgba(59, 130, 246, 0.35)'
   }));
 
   const categoriesList = [...prebuiltCategories, ...ownedCategoriesList];
   const activeTabIndex = Math.max(0, tabList.findIndex(t => t.id === activeTab));
 
+  const collectionTabs = ['All', 'Prebuild', 'Owned'];
+  const activeCollectionIndex = Math.max(0, collectionTabs.indexOf(collectionSubTab));
+
+  // Developer Profile View
   if (showDeveloperPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#ffffff',
+        backgroundColor: t.bg,
+        color: t.text,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -267,36 +391,22 @@ export default function Dashboard({ user, onLogout }) {
         overflowX: 'hidden'
       }}>
         <style>{`
-          * {
-            -webkit-tap-highlight-color: transparent !important;
-          }
+          * { -webkit-tap-highlight-color: transparent !important; }
           @keyframes pulseGlow {
             0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
             100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
           }
-          .animated-portfolio-btn {
-            animation: pulseGlow 2s infinite;
-          }
-          input[type=number]::-webkit-inner-spin-button, 
-          input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-          }
-          input[type=number] {
-            -moz-appearance: textfield;
-          }
-          ::-webkit-scrollbar {
-            display: none;
-          }
+          .animated-portfolio-btn { animation: pulseGlow 2s infinite; }
+          ::-webkit-scrollbar { display: none; }
         `}</style>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
           <button 
             onClick={() => setShowDeveloperPage(false)}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -304,12 +414,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: t.text
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '0.95rem', fontWeight: '600', margin: 0, color: '#9ca3af', letterSpacing: '0.05em' }}>Developer Profile</h2>
+          <h2 style={{ fontSize: '0.95rem', fontWeight: '600', margin: 0, color: t.textSecondary, letterSpacing: '0.05em' }}>Developer Profile</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -337,23 +447,23 @@ export default function Dashboard({ user, onLogout }) {
             <Laptop size={84} color="#3b82f6" strokeWidth={1.5} />
           </div>
 
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: '0 0 0.25rem 0', letterSpacing: '-0.025em' }}>NIKHIL GUPTA</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: '0 0 0.25rem 0', letterSpacing: '-0.025em', color: t.text }}>NIKHIL GUPTA</h1>
           <p style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: '600', margin: '0 0 1.25rem 0', letterSpacing: '0.05em' }}>
             BCA STUDENT & SOFTWARE DEVELOPER
           </p>
 
           <div style={{ width: '100%', textAlign: 'left', marginBottom: '1.5rem', padding: '0 0.25rem' }}>
-            <h3 style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.9rem', color: t.text, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Code size={16} color="#3b82f6" /> About the Creator
             </h3>
-            <p style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: '1.5', margin: '0 0 1rem 0' }}>
+            <p style={{ fontSize: '0.8rem', color: t.textSecondary, lineHeight: '1.5', margin: '0 0 1rem 0' }}>
               Hello! I am NIKHIL GUPTA, a first-year BCA student at IGNOU and a passionate software developer. I love crafting high-performance, mobile-first web apps with clean aesthetics, with an ultimate vision to build impactful technology at Google.
             </p>
 
-            <h3 style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.9rem', color: t.text, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <ShieldCheck size={16} color="#10b981" /> A Note of Gratitude
             </h3>
-            <p style={{ fontSize: '0.8rem', color: '#9ca3af', lineHeight: '1.5', margin: 0 }}>
+            <p style={{ fontSize: '0.8rem', color: t.textSecondary, lineHeight: '1.5', margin: 0 }}>
               To everyone downloading and placing your trust in Money Tracker: Thank you! Your belief inspires me to write cleaner code and build better tools. Your financial privacy and seamless experience are always my top priorities.
             </p>
           </div>
@@ -388,13 +498,16 @@ export default function Dashboard({ user, onLogout }) {
     );
   }
 
+  // Add Record Screen
   if (showAddRecordPage) {
+    const activeSelectedCat = categoriesList.find(c => c.name === selectedCategory) || prebuiltCategories[0];
+
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#ffffff',
+        backgroundColor: t.bg,
+        color: t.text,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -405,28 +518,19 @@ export default function Dashboard({ user, onLogout }) {
         position: 'relative'
       }}>
         <style>{`
-          * {
-            -webkit-tap-highlight-color: transparent !important;
-          }
+          * { -webkit-tap-highlight-color: transparent !important; }
           input[type=number]::-webkit-inner-spin-button, 
-          input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-          }
-          input[type=number] {
-            -moz-appearance: textfield;
-          }
-          ::-webkit-scrollbar {
-            display: none;
-          }
+          input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+          input[type=number] { -moz-appearance: textfield; }
+          ::-webkit-scrollbar { display: none; }
         `}</style>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
           <button 
             onClick={() => setShowAddRecordPage(false)}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -434,12 +538,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: t.text
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Add Record</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Add Record</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -456,8 +560,8 @@ export default function Dashboard({ user, onLogout }) {
         }}>
           <div style={{
             display: 'flex',
-            backgroundColor: '#0a0a0a',
-            border: '1px solid #1f2937',
+            backgroundColor: t.cardBg,
+            border: `1px solid ${t.border}`,
             borderRadius: '1rem',
             padding: '0.3rem'
           }}>
@@ -465,8 +569,8 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setRecordType('cashIn')}
               style={{
                 flex: 1,
-                backgroundColor: recordType === 'cashIn' ? '#1f2937' : 'transparent',
-                color: recordType === 'cashIn' ? '#4ade80' : '#9ca3af',
+                backgroundColor: recordType === 'cashIn' ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
+                color: recordType === 'cashIn' ? '#10b981' : t.textSecondary,
                 border: 'none',
                 borderRadius: '0.75rem',
                 padding: '0.75rem',
@@ -482,8 +586,8 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setRecordType('cashOut')}
               style={{
                 flex: 1,
-                backgroundColor: recordType === 'cashOut' ? '#1f2937' : 'transparent',
-                color: recordType === 'cashOut' ? '#f87171' : '#9ca3af',
+                backgroundColor: recordType === 'cashOut' ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
+                color: recordType === 'cashOut' ? '#ef4444' : t.textSecondary,
                 border: 'none',
                 borderRadius: '0.75rem',
                 padding: '0.75rem',
@@ -499,8 +603,8 @@ export default function Dashboard({ user, onLogout }) {
 
           <div>
             <div style={{
-              backgroundColor: '#0a0a0a',
-              border: '1px solid #1f2937',
+              backgroundColor: t.cardBg,
+              border: `1px solid ${t.border}`,
               borderRadius: '1rem',
               padding: '0.85rem 1rem',
               display: 'flex',
@@ -516,23 +620,23 @@ export default function Dashboard({ user, onLogout }) {
                 style={{
                   backgroundColor: 'transparent',
                   border: 'none',
-                  color: '#ffffff',
+                  color: t.text,
                   fontSize: '0.95rem',
                   outline: 'none',
                   width: '100%'
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem' }}>
-                <div style={{ height: '2px', backgroundColor: '#374151', width: '100%', borderRadius: '1px' }}></div>
+                <div style={{ height: '2px', backgroundColor: t.border, width: '100%', borderRadius: '1px' }}></div>
               </div>
-              <span style={{ fontSize: '0.65rem', color: '#6b7280', textAlign: 'right' }}>{recordDesc.length}/40</span>
+              <span style={{ fontSize: '0.65rem', color: t.textMuted, textAlign: 'right' }}>{recordDesc.length}/40</span>
             </div>
           </div>
 
           <div>
             <div style={{
-              backgroundColor: '#0a0a0a',
-              border: '1px solid #1f2937',
+              backgroundColor: t.cardBg,
+              border: `1px solid ${t.border}`,
               borderRadius: '1rem',
               padding: '0.85rem 1rem',
               display: 'flex',
@@ -540,7 +644,7 @@ export default function Dashboard({ user, onLogout }) {
               gap: '0.25rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: '#9ca3af', fontSize: '1rem', fontWeight: 'bold' }}>₹</span>
+                <span style={{ color: t.textSecondary, fontSize: '1rem', fontWeight: 'bold' }}>₹</span>
                 <input 
                   type="number"
                   placeholder="Amount"
@@ -549,7 +653,7 @@ export default function Dashboard({ user, onLogout }) {
                   style={{
                     backgroundColor: 'transparent',
                     border: 'none',
-                    color: '#ffffff',
+                    color: t.text,
                     fontSize: '1rem',
                     fontWeight: '600',
                     outline: 'none',
@@ -557,8 +661,8 @@ export default function Dashboard({ user, onLogout }) {
                   }}
                 />
               </div>
-              <div style={{ height: '2px', backgroundColor: '#374151', width: '100%', borderRadius: '1px', marginTop: '0.2rem' }}></div>
-              <span style={{ fontSize: '0.65rem', color: '#6b7280', textAlign: 'right' }}>{recordAmount.length}/8</span>
+              <div style={{ height: '2px', backgroundColor: t.border, width: '100%', borderRadius: '1px', marginTop: '0.2rem' }}></div>
+              <span style={{ fontSize: '0.65rem', color: t.textMuted, textAlign: 'right' }}>{recordAmount.length}/8</span>
             </div>
           </div>
 
@@ -568,11 +672,11 @@ export default function Dashboard({ user, onLogout }) {
                 key={amt}
                 onClick={() => setRecordAmount(amt.replace('+₹', ''))}
                 style={{
-                  backgroundColor: '#0a0a0a',
-                  border: '1px solid #1f2937',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
                   borderRadius: '0.75rem',
                   padding: '0.6rem 0.2rem',
-                  color: '#9ca3af',
+                  color: t.textSecondary,
                   fontSize: '0.75rem',
                   fontWeight: '600',
                   cursor: 'pointer'
@@ -584,12 +688,12 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: '600', marginBottom: '0.5rem' }}>Category</p>
+            <p style={{ fontSize: '0.75rem', color: t.textSecondary, fontWeight: '600', marginBottom: '0.5rem' }}>Category</p>
             <div 
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
               style={{
-                backgroundColor: '#0a0a0a',
-                border: '1px solid #1f2937',
+                backgroundColor: t.cardBg,
+                border: `1px solid ${t.border}`,
                 borderRadius: '1rem',
                 padding: '0.9rem 1rem',
                 display: 'flex',
@@ -599,12 +703,21 @@ export default function Dashboard({ user, onLogout }) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(74, 222, 128, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Wallet size={14} color="#4ade80" />
+                <div style={{ 
+                  width: '32px', 
+                  height: '32px', 
+                  borderRadius: '0.65rem', 
+                  backgroundColor: activeSelectedCat.color, 
+                  border: `1px solid ${activeSelectedCat.borderColor}`,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
+                  {activeSelectedCat.icon}
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#ffffff' }}>{selectedCategory}</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: t.text }}>{selectedCategory}</span>
               </div>
-              <ChevronDown size={18} color="#9ca3af" />
+              <ChevronDown size={18} color={t.textSecondary} />
             </div>
 
             {showCategoryDropdown && (
@@ -613,16 +726,16 @@ export default function Dashboard({ user, onLogout }) {
                 bottom: '120px',
                 left: '0',
                 right: '0',
-                backgroundColor: '#121212',
-                border: '1px solid #262626',
+                backgroundColor: t.secondaryCardBg,
+                border: `1px solid ${t.borderSecondary}`,
                 borderRadius: '1.25rem',
                 padding: '1rem',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.9)',
+                boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.9)' : '0 20px 40px rgba(0,0,0,0.15)',
                 zIndex: 50,
                 maxHeight: '280px',
                 overflowY: 'auto'
               }}>
-                <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
                   {['All', 'Prebuild', 'Owned'].map((tab) => (
                     <button
                       key={tab}
@@ -632,8 +745,8 @@ export default function Dashboard({ user, onLogout }) {
                       }}
                       style={{
                         flex: 1,
-                        backgroundColor: categoryTab === tab ? '#1f2937' : 'transparent',
-                        color: '#ffffff',
+                        backgroundColor: categoryTab === tab ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
+                        color: t.text,
                         border: 'none',
                         borderRadius: '1.25rem',
                         padding: '0.4rem',
@@ -664,15 +777,25 @@ export default function Dashboard({ user, onLogout }) {
                           alignItems: 'center',
                           padding: '0.65rem 0.75rem',
                           borderRadius: '0.75rem',
-                          backgroundColor: selectedCategory === cat.name ? '#1a2e26' : 'transparent',
+                          backgroundColor: selectedCategory === cat.name ? (isDark ? '#1a2e26' : '#dcfce7') : 'transparent',
                           cursor: 'pointer'
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                          {cat.icon}
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ffffff' }}>{cat.name}</span>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '0.5rem',
+                            backgroundColor: cat.color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            {cat.icon}
+                          </div>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: t.text }}>{cat.name}</span>
                         </div>
-                        {selectedCategory === cat.name && <Check size={16} color="#4ade80" />}
+                        {selectedCategory === cat.name && <Check size={16} color="#10b981" />}
                       </div>
                     ))}
                 </div>
@@ -686,12 +809,12 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowAddRecordPage(false)}
             style={{
               flex: 1,
-              backgroundColor: '#0a0a0a',
-              color: '#ffffff',
+              backgroundColor: t.cardBg,
+              color: t.text,
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: '1px solid #1f2937',
+              border: `1px solid ${t.border}`,
               cursor: 'pointer',
               fontSize: '0.95rem'
             }}
@@ -703,15 +826,15 @@ export default function Dashboard({ user, onLogout }) {
             onClick={handleSaveRecord}
             style={{
               flex: 1.5,
-              backgroundColor: '#ffffff',
-              color: '#000000',
+              backgroundColor: t.actionBtnBg,
+              color: t.actionBtnColor,
               fontWeight: '700',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
               border: 'none',
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
+              boxShadow: isDark ? '0 4px 15px rgba(255,255,255,0.2)' : '0 4px 15px rgba(0,0,0,0.2)'
             }}
           >
             Add
@@ -721,13 +844,14 @@ export default function Dashboard({ user, onLogout }) {
     );
   }
 
+  // Create Collection Screen
   if (showEditCollectionPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#ffffff',
+        backgroundColor: t.bg,
+        color: t.text,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -737,19 +861,15 @@ export default function Dashboard({ user, onLogout }) {
         overflowX: 'hidden'
       }}>
         <style>{`
-          * {
-            -webkit-tap-highlight-color: transparent !important;
-          }
-          ::-webkit-scrollbar {
-            display: none;
-          }
+          * { -webkit-tap-highlight-color: transparent !important; }
+          ::-webkit-scrollbar { display: none; }
         `}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
           <button 
             onClick={() => setShowEditCollectionPage(false)}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -757,12 +877,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: t.text
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Create Collection</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Create Collection</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -777,10 +897,10 @@ export default function Dashboard({ user, onLogout }) {
           justifyContent: 'center'
         }}>
           <div>
-            <label style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Collection Name</label>
+            <label style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Collection Name</label>
             <div style={{
-              backgroundColor: '#0a0a0a',
-              border: '1px solid #1f2937',
+              backgroundColor: t.cardBg,
+              border: `1px solid ${t.border}`,
               borderRadius: '1rem',
               padding: '0.75rem 1rem',
               display: 'flex',
@@ -796,7 +916,7 @@ export default function Dashboard({ user, onLogout }) {
                 style={{
                   backgroundColor: 'transparent',
                   border: 'none',
-                  color: '#ffffff',
+                  color: t.text,
                   fontSize: '1rem',
                   fontWeight: '600',
                   outline: 'none',
@@ -804,14 +924,14 @@ export default function Dashboard({ user, onLogout }) {
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                <div style={{ height: '2px', backgroundColor: '#ffffff', width: '60%', borderRadius: '1px' }}></div>
-                <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{editingCollectionName.length}/25</span>
+                <div style={{ height: '2px', backgroundColor: '#3b82f6', width: '60%', borderRadius: '1px' }}></div>
+                <span style={{ fontSize: '0.7rem', color: t.textMuted }}>{editingCollectionName.length}/25</span>
               </div>
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Theme Color</label>
+            <label style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Theme Color</label>
             <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {['#3b82f6', '#0d9488', '#10b981', '#f59e0b', '#ec4899', '#a855f7', '#facc15', '#06b6d4', '#6366f1'].map((color) => (
                 <div 
@@ -827,6 +947,7 @@ export default function Dashboard({ user, onLogout }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     border: selectedColor === color ? '2px solid #ffffff' : '2px solid transparent',
+                    boxShadow: selectedColor === color ? '0 0 10px rgba(0,0,0,0.4)' : 'none',
                     flexShrink: 0
                   }}
                 >
@@ -837,7 +958,7 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Collection Icon</label>
+            <label style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Collection Icon</label>
             <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {[
                 { id: 'plane', icon: <Plane size={20} /> },
@@ -847,7 +968,7 @@ export default function Dashboard({ user, onLogout }) {
                 { id: 'gym', icon: <Dumbbell size={20} /> },
                 { id: 'brief', icon: <Briefcase size={20} /> },
                 { id: 'wallet', icon: <Wallet size={20} /> },
-                { id: 'food', icon: <Utensils size={20} /> }
+                { id: 'food', icon: <UtensilsCrossed size={20} /> }
               ].map((item) => (
                 <div 
                   key={item.id}
@@ -856,9 +977,9 @@ export default function Dashboard({ user, onLogout }) {
                     width: '50px',
                     height: '50px',
                     borderRadius: '1rem',
-                    backgroundColor: selectedIcon === item.id ? '#1e3a8a' : '#0a0a0a',
-                    border: selectedIcon === item.id ? '1px solid #3b82f6' : '1px solid #1f2937',
-                    color: selectedIcon === item.id ? '#ffffff' : '#9ca3af',
+                    backgroundColor: selectedIcon === item.id ? (isDark ? '#1e3a8a' : '#dbeafe') : t.cardBg,
+                    border: selectedIcon === item.id ? '1px solid #3b82f6' : `1px solid ${t.border}`,
+                    color: selectedIcon === item.id ? '#3b82f6' : t.textSecondary,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -878,12 +999,12 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowEditCollectionPage(false)}
             style={{
               flex: 1,
-              backgroundColor: '#0a0a0a',
-              color: '#ffffff',
+              backgroundColor: t.cardBg,
+              color: t.text,
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: '1px solid #1f2937',
+              border: `1px solid ${t.border}`,
               cursor: 'pointer',
               fontSize: '0.95rem'
             }}
@@ -901,15 +1022,15 @@ export default function Dashboard({ user, onLogout }) {
             }}
             style={{
               flex: 1.5,
-              backgroundColor: '#ffffff',
-              color: '#000000',
+              backgroundColor: t.actionBtnBg,
+              color: t.actionBtnColor,
               fontWeight: '700',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
               border: 'none',
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 4px 15px rgba(255,255,255,0.2)'
+              boxShadow: isDark ? '0 4px 15px rgba(255,255,255,0.2)' : '0 4px 15px rgba(0,0,0,0.2)'
             }}
           >
             Create
@@ -919,13 +1040,14 @@ export default function Dashboard({ user, onLogout }) {
     );
   }
 
+  // Summary Screen
   if (showSummaryPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#ffffff',
+        backgroundColor: t.bg,
+        color: t.text,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -934,17 +1056,13 @@ export default function Dashboard({ user, onLogout }) {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         overflowX: 'hidden'
       }}>
-        <style>{`
-          * {
-            -webkit-tap-highlight-color: transparent !important;
-          }
-        `}</style>
+        <style>{`* { -webkit-tap-highlight-color: transparent !important; }`}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1.5rem' }}>
           <button 
             onClick={() => setShowSummaryPage(false)}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -952,12 +1070,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: t.text
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Summary</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Summary</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -973,19 +1091,25 @@ export default function Dashboard({ user, onLogout }) {
           gap: '2rem'
         }}>
           <div style={{ textAlign: 'center', width: '100%' }}>
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Amount</p>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>₹{netBalance.toFixed(2)}</h1>
+            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Amount</p>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: t.text, margin: 0 }}>
+              <AnimatedCounter value={netBalance} />
+            </h1>
           </div>
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: '#0a0a0a', borderRadius: '1rem', border: '1px solid #1f2937' }}>
-              <span style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: '600' }}>Total Cash In</span>
-              <span style={{ color: '#4ade80', fontSize: '1rem', fontWeight: '700' }}>₹{totalCashIn.toFixed(2)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: t.cardBg, borderRadius: '1rem', border: `1px solid ${t.border}` }}>
+              <span style={{ color: t.textSecondary, fontSize: '0.9rem', fontWeight: '600' }}>Total Cash In</span>
+              <span style={{ color: '#10b981', fontSize: '1rem', fontWeight: '700' }}>
+                +<AnimatedCounter value={totalCashIn} />
+              </span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: '#0a0a0a', borderRadius: '1rem', border: '1px solid #1f2937' }}>
-              <span style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: '600' }}>Total Cash Out</span>
-              <span style={{ color: '#f87171', fontSize: '1rem', fontWeight: '700' }}>₹{totalCashOut.toFixed(2)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: t.cardBg, borderRadius: '1rem', border: `1px solid ${t.border}` }}>
+              <span style={{ color: t.textSecondary, fontSize: '0.9rem', fontWeight: '600' }}>Total Cash Out</span>
+              <span style={{ color: '#ef4444', fontSize: '1rem', fontWeight: '700' }}>
+                -<AnimatedCounter value={totalCashOut} />
+              </span>
             </div>
           </div>
         </div>
@@ -995,15 +1119,15 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowSummaryPage(false)}
             style={{
               width: '100%',
-              backgroundColor: '#0a0a0a',
-              color: '#ffffff',
+              backgroundColor: t.cardBg,
+              color: t.text,
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: '1px solid #1f2937',
+              border: `1px solid ${t.border}`,
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 15px 25px rgba(0,0,0,0.8)'
+              boxShadow: t.shadow
             }}
           >
             Got it
@@ -1013,13 +1137,14 @@ export default function Dashboard({ user, onLogout }) {
     );
   }
 
+  // Filter Screen
   if (showFilterPage) {
     return (
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#ffffff',
+        backgroundColor: t.bg,
+        color: t.text,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -1028,17 +1153,13 @@ export default function Dashboard({ user, onLogout }) {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         overflowX: 'hidden'
       }}>
-        <style>{`
-          * {
-            -webkit-tap-highlight-color: transparent !important;
-          }
-        `}</style>
+        <style>{`* { -webkit-tap-highlight-color: transparent !important; }`}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1.5rem' }}>
           <button 
             onClick={() => setShowFilterPage(false)}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -1046,12 +1167,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: t.text
             }}
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: '#ffffff', letterSpacing: '0.05em' }}>Filter Transactions</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Filter Transactions</h2>
           <div style={{ width: '40px' }}></div>
         </div>
 
@@ -1066,16 +1187,16 @@ export default function Dashboard({ user, onLogout }) {
           paddingTop: '0.5rem'
         }}>
           <div>
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Sort By</p>
-            <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1rem', padding: '0.3rem' }}>
+            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Sort By</p>
+            <div style={{ display: 'flex', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
               {['Newest', 'Oldest'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setSortBy(item)}
                   style={{
                     flex: 1,
-                    backgroundColor: sortBy === item ? '#1f2937' : 'transparent',
-                    color: '#ffffff',
+                    backgroundColor: sortBy === item ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
+                    color: t.text,
                     border: 'none',
                     borderRadius: '0.75rem',
                     padding: '0.75rem',
@@ -1095,16 +1216,16 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Record Type</p>
-            <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1rem', padding: '0.3rem' }}>
+            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Record Type</p>
+            <div style={{ display: 'flex', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
               {['All', 'Cash In', 'Cash Out'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setFilterRecordType(item)}
                   style={{
                     flex: 1,
-                    backgroundColor: filterRecordType === item ? '#1f2937' : 'transparent',
-                    color: '#ffffff',
+                    backgroundColor: filterRecordType === item ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
+                    color: t.text,
                     border: 'none',
                     borderRadius: '0.75rem',
                     padding: '0.75rem',
@@ -1124,15 +1245,15 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Time</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '1rem', padding: '0.3rem' }}>
+            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Time</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
               {['All', 'Daily', 'Weekly', 'Monthly'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setTimeFilter(item)}
                   style={{
-                    backgroundColor: timeFilter === item ? '#1f2937' : 'transparent',
-                    color: '#ffffff',
+                    backgroundColor: timeFilter === item ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
+                    color: t.text,
                     border: 'none',
                     borderRadius: '0.75rem',
                     padding: '0.75rem',
@@ -1157,15 +1278,15 @@ export default function Dashboard({ user, onLogout }) {
             onClick={() => setShowFilterPage(false)}
             style={{
               width: '100%',
-              backgroundColor: '#0a0a0a',
-              color: '#ffffff',
+              backgroundColor: t.cardBg,
+              color: t.text,
               fontWeight: '600',
               padding: '0.9rem 1rem',
               borderRadius: '2.5rem',
-              border: '1px solid #1f2937',
+              border: `1px solid ${t.border}`,
               cursor: 'pointer',
               fontSize: '0.95rem',
-              boxShadow: '0 15px 25px rgba(0,0,0,0.8)'
+              boxShadow: t.shadow
             }}
           >
             Apply Filters
@@ -1179,8 +1300,8 @@ export default function Dashboard({ user, onLogout }) {
     <div style={{
       width: '100vw',
       minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#ffffff',
+      backgroundColor: t.bg,
+      color: t.text,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -1251,9 +1372,9 @@ export default function Dashboard({ user, onLogout }) {
           bottom: '5.5rem',
           left: '50%',
           transform: 'translateX(-50%)',
-          backgroundColor: '#121212',
-          color: '#ffffff',
-          border: '1px solid #27272a',
+          backgroundColor: t.secondaryCardBg,
+          color: t.text,
+          border: `1px solid ${t.borderSecondary}`,
           padding: '0.75rem 1.25rem',
           borderRadius: '9999px',
           fontSize: '0.85rem',
@@ -1261,7 +1382,7 @@ export default function Dashboard({ user, onLogout }) {
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
+          boxShadow: isDark ? '0 10px 25px rgba(0,0,0,0.8)' : '0 10px 25px rgba(0,0,0,0.15)',
           zIndex: 1000,
           whiteSpace: 'nowrap'
         }}>
@@ -1270,15 +1391,16 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       )}
 
+      {/* Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%', maxWidth: '380px', marginInline: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
             width: '42px',
             height: '42px',
             borderRadius: '50%',
-            backgroundColor: '#1f2937',
+            backgroundColor: isDark ? '#1f2937' : '#e0e7ff',
             overflow: 'hidden',
-            border: '1px solid #374151',
+            border: `1px solid ${isDark ? '#374151' : '#c7d2fe'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1289,17 +1411,18 @@ export default function Dashboard({ user, onLogout }) {
             {user.name.charAt(0)}
           </div>
           <div>
-            <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Hello,</p>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{user.name}</h1>
+            <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Hello,</p>
+            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: t.text, margin: 0 }}>{user.name}</h1>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          {/* Quick Theme Switch in Header */}
           <button 
-            onClick={() => setShowDeveloperPage(true)}
+            onClick={toggleTheme}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -1307,19 +1430,20 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#3b82f6',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.5)'
+              color: isDark ? '#facc15' : '#4f46e5',
+              boxShadow: isDark ? '0 4px 10px rgba(0,0,0,0.5)' : '0 4px 10px rgba(0,0,0,0.06)'
             }}
-            title="Developer Info"
+            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            <Code size={20} />
+            {isDark ? <Sun size={19} /> : <Moon size={19} />}
           </button>
 
+          {/* Settings Button */}
           <button 
             onClick={() => setShowSettingsModal(true)}
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: t.secondaryCardBg,
+              border: `1px solid ${t.borderSecondary}`,
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -1327,11 +1451,12 @@ export default function Dashboard({ user, onLogout }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#ffffff'
+              color: t.text,
+              boxShadow: isDark ? '0 4px 10px rgba(0,0,0,0.5)' : '0 4px 10px rgba(0,0,0,0.06)'
             }}
             title="Settings"
           >
-            <Settings size={20} />
+            <Settings size={19} />
           </button>
         </div>
       </div>
@@ -1344,46 +1469,53 @@ export default function Dashboard({ user, onLogout }) {
         style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}
       >
         
+        {/* HOME TAB */}
         {activeTab === 'home' && (
           <>
             <div 
               onClick={() => setShowSummaryPage(true)}
               style={{
-                backgroundColor: '#0a0a0a',
-                border: '1px solid #1f2937',
+                backgroundColor: t.cardBg,
+                border: `1px solid ${t.border}`,
                 padding: '1.25rem',
                 borderRadius: '1.25rem',
                 marginBottom: '1.5rem',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                boxShadow: t.shadow,
                 cursor: 'pointer'
               }}
             >
-              <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: '#ffffff', textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>₹{netBalance.toFixed(2)}</p>
+              <p style={{ color: t.textSecondary, fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
+              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: t.text, textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>
+                <AnimatedCounter value={netBalance} />
+              </p>
               
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingUp size={14} color="#4ade80" /> Cash In
+                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
+                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                    <TrendingUp size={14} color="#10b981" /> Cash In
                   </span>
-                  <p style={{ fontWeight: 'bold', color: '#4ade80', fontSize: '0.9rem', margin: 0 }}>₹{totalCashIn.toFixed(2)}</p>
+                  <p style={{ fontWeight: 'bold', color: '#10b981', fontSize: '0.9rem', margin: 0 }}>
+                    <AnimatedCounter value={totalCashIn} />
+                  </p>
                 </div>
-                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingDown size={14} color="#f87171" /> Cash Out
+                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
+                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                    <TrendingDown size={14} color="#ef4444" /> Cash Out
                   </span>
-                  <p style={{ fontWeight: 'bold', color: '#f87171', fontSize: '0.9rem', margin: 0 }}>₹{totalCashOut.toFixed(2)}</p>
+                  <p style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.9rem', margin: 0 }}>
+                    <AnimatedCounter value={totalCashOut} />
+                  </p>
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>Recent Activity</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: t.text }}>Recent Activity</h3>
               <button 
                 onClick={() => setShowFilterPage(true)}
                 style={{
-                  backgroundColor: '#121212',
-                  border: '1px solid #1f2937',
+                  backgroundColor: t.secondaryCardBg,
+                  border: `1px solid ${t.border}`,
                   borderRadius: '50%',
                   width: '36px',
                   height: '36px',
@@ -1391,7 +1523,7 @@ export default function Dashboard({ user, onLogout }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#9ca3af'
+                  color: t.textSecondary
                 }}
                 title="Filter Activity"
               >
@@ -1400,7 +1532,7 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             {loadingTransactions ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>Loading database records...</div>
+              <div style={{ textAlign: 'center', padding: '2rem', color: t.textSecondary }}>Loading database records...</div>
             ) : transactions.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {transactions
@@ -1434,54 +1566,60 @@ export default function Dashboard({ user, onLogout }) {
                       return new Date(b.date) - new Date(a.date);
                     }
                   })
-                  .map((txn) => (
-                    <div key={txn._id} style={{
-                      backgroundColor: '#0a0a0a',
-                      border: '1px solid #1f2937',
-                      borderRadius: '1rem',
-                      padding: '1rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{
-                          width: '38px',
-                          height: '38px',
-                          borderRadius: '0.75rem',
-                          backgroundColor: 'rgba(74, 222, 128, 0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <Wallet size={18} color="#4ade80" />
-                        </div>
-                        <div>
-                          <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: '0 0 0.2rem 0' }}>{txn.description}</p>
-                          <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: 0 }}>{txn.category} • {new Date(txn.date).toLocaleDateString()}</p>
-                        </div>
-                      </div>
+                  .map((txn) => {
+                    const matchedCategory = categoriesList.find(c => c.name === txn.category) || prebuiltCategories[0];
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#4ade80' : '#f87171' }}>
-                          {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
-                        </span>
-                        <button 
-                          onClick={() => handleDeleteTransaction(txn._id)}
-                          style={{
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            color: '#6b7280',
-                            cursor: 'pointer',
-                            padding: '4px'
-                          }}
-                          title="Delete Record"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                    return (
+                      <div key={txn._id} style={{
+                        backgroundColor: t.cardBg,
+                        border: `1px solid ${t.border}`,
+                        borderRadius: '1rem',
+                        padding: '1rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.05)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{
+                            width: '38px',
+                            height: '38px',
+                            borderRadius: '0.75rem',
+                            backgroundColor: matchedCategory.color,
+                            border: `1px solid ${matchedCategory.borderColor}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            {matchedCategory.icon}
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: '0 0 0.2rem 0', color: t.text }}>{txn.description}</p>
+                            <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: 0 }}>{txn.category} • {new Date(txn.date).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#10b981' : '#ef4444' }}>
+                            {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
+                          </span>
+                          <button 
+                            onClick={() => handleDeleteTransaction(txn._id)}
+                            style={{
+                              backgroundColor: 'transparent',
+                              border: 'none',
+                              color: t.textMuted,
+                              cursor: 'pointer',
+                              padding: '4px'
+                            }}
+                            title="Delete Record"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             ) : (
               <div style={{
@@ -1493,11 +1631,11 @@ export default function Dashboard({ user, onLogout }) {
                 justifyContent: 'center',
                 flexGrow: 1
               }}>
-                <div style={{ marginBottom: '1rem', color: '#ffffff' }}>
+                <div style={{ marginBottom: '1rem', color: t.text }}>
                   <Ghost size={64} strokeWidth={1.5} />
                 </div>
-                <p style={{ color: '#ffffff', fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Activity Yet</p>
-                <p style={{ fontSize: '0.75rem', color: '#6b7280', maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
+                <p style={{ color: t.text, fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Activity Yet</p>
+                <p style={{ fontSize: '0.75rem', color: t.textMuted, maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
                   Change filters or tap the "+" button below to add a new entry.
                 </p>
               </div>
@@ -1505,57 +1643,64 @@ export default function Dashboard({ user, onLogout }) {
           </>
         )}
 
+        {/* ANALYSIS TAB */}
         {activeTab === 'analysis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em' }}>Insights & Analytics</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Insights & Analytics</h2>
 
             <div 
               onClick={() => setShowSummaryPage(true)}
               style={{
-                backgroundColor: '#0a0a0a',
-                border: '1px solid #1f2937',
+                backgroundColor: t.cardBg,
+                border: `1px solid ${t.border}`,
                 padding: '1.25rem',
                 borderRadius: '1.25rem',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                boxShadow: t.shadow,
                 cursor: 'pointer'
               }}
             >
-              <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: '#ffffff', textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>₹{netBalance.toFixed(2)}</p>
+              <p style={{ color: t.textSecondary, fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
+              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: t.text, textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>
+                <AnimatedCounter value={netBalance} />
+              </p>
               
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingUp size={14} color="#4ade80" /> Cash In
+                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
+                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                    <TrendingUp size={14} color="#10b981" /> Cash In
                   </span>
-                  <p style={{ fontWeight: 'bold', color: '#4ade80', fontSize: '0.9rem', margin: 0 }}>₹{totalCashIn.toFixed(2)}</p>
+                  <p style={{ fontWeight: 'bold', color: '#10b981', fontSize: '0.9rem', margin: 0 }}>
+                    <AnimatedCounter value={totalCashIn} />
+                  </p>
                 </div>
-                <div style={{ backgroundColor: '#121212', padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: '1px solid #1f2937' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingDown size={14} color="#f87171" /> Cash Out
+                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
+                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
+                    <TrendingDown size={14} color="#ef4444" /> Cash Out
                   </span>
-                  <p style={{ fontWeight: 'bold', color: '#f87171', fontSize: '0.9rem', margin: 0 }}>₹{totalCashOut.toFixed(2)}</p>
+                  <p style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.9rem', margin: 0 }}>
+                    <AnimatedCounter value={totalCashOut} />
+                  </p>
                 </div>
               </div>
             </div>
 
             <div style={{
-              backgroundColor: '#0a0a0a',
-              border: '1px solid #1f2937',
+              backgroundColor: t.cardBg,
+              border: `1px solid ${t.border}`,
               padding: '1.25rem',
               borderRadius: '1.25rem',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+              boxShadow: t.shadow
             }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '0 0 0.25rem 0' }}>Weekly Spending Activity</h3>
-              <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 1.5rem 0' }}>Tap any bar to see details</p>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: t.text }}>Weekly Spending Activity</h3>
+              <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 1.5rem 0' }}>Tap any bar to see details</p>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '110px', paddingBottom: '0.5rem', borderBottom: '1px solid #1f2937' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '110px', paddingBottom: '0.5rem', borderBottom: `1px solid ${t.border}` }}>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                   const dayAmt = weeklySpendingMap[day] || 0;
                   const maxAmt = Math.max(...Object.values(weeklySpendingMap), 1000);
-                  const barHeight = dayAmt > 0 ? Math.min(Math.max((dayAmt / maxAmt) * 90, 15), 90) : 2;
+                  const barHeight = dayAmt > 0 ? Math.min(Math.max((dayAmt / maxAmt) * 90, 15), 90) : 3;
                   const isSelected = selectedDay === day;
-                  const barColor = dayAmt > 0 ? '#f87171' : '#1f2937';
+                  const barColor = dayAmt > 0 ? '#ef4444' : (isDark ? '#1f2937' : '#e2e8f0');
                   return (
                     <div 
                       key={day}
@@ -1576,7 +1721,7 @@ export default function Dashboard({ user, onLogout }) {
                         borderRadius: '4px',
                         transition: 'height 0.2s ease'
                       }}></div>
-                      <span style={{ fontSize: '0.7rem', color: isSelected ? '#ffffff' : '#9ca3af', fontWeight: isSelected ? 'bold' : 'normal' }}>
+                      <span style={{ fontSize: '0.7rem', color: isSelected ? t.text : t.textSecondary, fontWeight: isSelected ? 'bold' : 'normal' }}>
                         {day}
                       </span>
                     </div>
@@ -1586,38 +1731,43 @@ export default function Dashboard({ user, onLogout }) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.5rem' }}>
                 <div>
-                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 0.15rem 0' }}>Total Cash In</p>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#4ade80', margin: 0 }}>₹{totalCashIn.toFixed(2)}</p>
+                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 0.15rem 0' }}>Total Cash In</p>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#10b981', margin: 0 }}>
+                    <AnimatedCounter value={totalCashIn} />
+                  </p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 0.15rem 0' }}>Total Cash Out</p>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#f87171', margin: 0 }}>₹{totalCashOut.toFixed(2)}</p>
+                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 0.15rem 0' }}>Total Cash Out</p>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#ef4444', margin: 0 }}>
+                    <AnimatedCounter value={totalCashOut} />
+                  </p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 0.25rem 0' }}>Spending Overview</h3>
-              <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 1rem 0' }}>Spending by Category</p>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: t.text }}>Spending Overview</h3>
+              <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 1rem 0' }}>Spending by Category</p>
 
               <div style={{
-                backgroundColor: '#0a0a0a',
-                border: '1px solid #1f2937',
+                backgroundColor: t.cardBg,
+                border: `1px solid ${t.border}`,
                 borderRadius: '1.25rem',
                 padding: '1.25rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.75rem'
+                gap: '0.75rem',
+                boxShadow: t.shadow
               }}>
                 {Object.keys(categorySpending).length > 0 ? (
                   Object.entries(categorySpending).map(([cat, amt]) => (
-                    <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1f2937', paddingBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: '600' }}>{cat}</span>
-                      <span style={{ fontSize: '0.9rem', color: '#f87171', fontWeight: 'bold' }}>₹{amt}</span>
+                    <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, paddingBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.9rem', color: t.text, fontWeight: '600' }}>{cat}</span>
+                      <span style={{ fontSize: '0.9rem', color: '#ef4444', fontWeight: 'bold' }}>₹{amt}</span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center', margin: 0 }}>
+                  <p style={{ fontSize: '0.8rem', color: t.textMuted, textAlign: 'center', margin: 0 }}>
                     Add cash-out spending records to view category breakdown.
                   </p>
                 )}
@@ -1626,76 +1776,125 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         )}
 
+        {/* VAULTS / COLLECTIONS TAB */}
         {activeTab === 'collection' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em' }}>Collections & Vaults</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Collections & Vaults</h2>
 
-            <div style={{ display: 'flex', backgroundColor: '#0a0a0a', border: '1px solid #1f2937', borderRadius: '2rem', padding: '0.3rem' }}>
-              {['All', 'Prebuild', 'Owned'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setCollectionSubTab(tab)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: collectionSubTab === tab ? '#1f2937' : 'transparent',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '1.75rem',
-                    padding: '0.6rem',
-                    fontWeight: '600',
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {collectionSubTab === tab && '✓ '} {tab}
-                </button>
-              ))}
+            {/* Smooth Sliding Pill Segmented Slider for Collections */}
+            <div style={{
+              position: 'relative',
+              display: 'flex',
+              backgroundColor: t.cardBg,
+              border: `1px solid ${t.border}`,
+              borderRadius: '2rem',
+              padding: '4px',
+              alignItems: 'center'
+            }}>
+              {/* Animated Sliding Pill */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  bottom: '4px',
+                  left: '4px',
+                  width: 'calc((100% - 8px) / 3)',
+                  transform: `translateX(${activeCollectionIndex * 100}%)`,
+                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                  border: `1px solid ${isDark ? '#374151' : '#cbd5e1'}`,
+                  borderRadius: '1.75rem',
+                  transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 8px rgba(0,0,0,0.08)'
+                }}
+              />
+
+              {collectionTabs.map((tab) => {
+                const isActive = collectionSubTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setCollectionSubTab(tab)}
+                    style={{
+                      position: 'relative',
+                      zIndex: 2,
+                      flex: 1,
+                      backgroundColor: 'transparent',
+                      color: isActive ? t.text : t.textSecondary,
+                      border: 'none',
+                      borderRadius: '1.75rem',
+                      padding: '0.65rem 0.2rem',
+                      fontWeight: isActive ? '700' : '600',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      transition: 'color 0.25s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.3rem',
+                      userSelect: 'none'
+                    }}
+                  >
+                    {isActive && <Check size={14} color="#3b82f6" />}
+                    {tab}
+                  </button>
+                );
+              })}
             </div>
 
+            {/* Collection Items List */}
             {collectionSubTab === 'All' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {[...prebuiltCategories, ...ownedCollections.map(item => ({ title: item.name, icon: <Box size={20} color={item.color || "#3b82f6"} />, color: 'rgba(59, 130, 246, 0.15)' }))].map((item, index) => {
+                {[...prebuiltCategories, ...ownedCollections.map(item => ({ 
+                  title: item.name, 
+                  icon: <Box size={18} color={item.color || "#3b82f6"} />, 
+                  color: 'rgba(59, 130, 246, 0.16)',
+                  borderColor: 'rgba(59, 130, 246, 0.35)'
+                }))].map((item, index) => {
                   const catName = item.name || item.title;
                   const catData = categorySummary[catName] || { cashIn: 0, cashOut: 0, count: 0 };
                   const netCatBalance = catData.cashIn - catData.cashOut;
                   return (
                     <div key={index} style={{
-                      backgroundColor: '#0a0a0a',
-                      border: '1px solid #1f2937',
+                      backgroundColor: t.cardBg,
+                      border: `1px solid ${t.border}`,
                       borderRadius: '1.25rem',
                       padding: '1.25rem',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'flex-start',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                      boxShadow: t.shadow
                     }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div style={{
-                          width: '40px',
-                          height: '40px',
+                          width: '42px',
+                          height: '42px',
                           borderRadius: '0.875rem',
-                          backgroundColor: item.color || 'rgba(74, 222, 128, 0.15)',
+                          backgroundColor: item.color,
+                          border: `1px solid ${item.borderColor}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center'
                         }}>
-                          {item.icon || <Box size={20} color="#3b82f6" />}
+                          {item.icon}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0' }}>{catName}</h4>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>
+                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: t.text }}>{catName}</h4>
+                          <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
                             {catData.count} records
                           </p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                           <div>
-                            <p style={{ fontSize: '0.65rem', color: '#4ade80', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
-                            <p style={{ fontSize: '0.65rem', color: '#f87171', margin: 0 }}>Out: ₹{catData.cashOut}</p>
+                            <p style={{ fontSize: '0.65rem', color: '#10b981', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
+                            <p style={{ fontSize: '0.65rem', color: '#ef4444', margin: 0 }}>Out: ₹{catData.cashOut}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 0.1rem 0' }}>Remaining</p>
-                            <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#4ade80' : '#f87171', margin: 0 }}>₹{netCatBalance.toFixed(2)}</p>
+                            <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: '0 0 0.1rem 0' }}>Remaining</p>
+                            <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                              <AnimatedCounter value={netCatBalance} />
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1704,9 +1903,9 @@ export default function Dashboard({ user, onLogout }) {
                           setEditingCollectionName(catName);
                           setShowEditCollectionPage(true);
                         }}
-                        style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                        style={{ backgroundColor: 'transparent', border: 'none', color: t.textSecondary, cursor: 'pointer', padding: '4px' }}
                       >
-                        <Edit3 size={16} />
+                        <Edit3 size={17} />
                       </button>
                     </div>
                   );
@@ -1721,21 +1920,22 @@ export default function Dashboard({ user, onLogout }) {
                   const netCatBalance = catData.cashIn - catData.cashOut;
                   return (
                     <div key={index} style={{
-                      backgroundColor: '#0a0a0a',
-                      border: '1px solid #1f2937',
+                      backgroundColor: t.cardBg,
+                      border: `1px solid ${t.border}`,
                       borderRadius: '1.25rem',
                       padding: '1.25rem',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'flex-start',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                      boxShadow: t.shadow
                     }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div style={{
-                          width: '40px',
-                          height: '40px',
+                          width: '42px',
+                          height: '42px',
                           borderRadius: '0.875rem',
                           backgroundColor: item.color,
+                          border: `1px solid ${item.borderColor}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center'
@@ -1743,19 +1943,21 @@ export default function Dashboard({ user, onLogout }) {
                           {item.icon}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0' }}>{item.name}</h4>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>
+                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: t.text }}>{item.name}</h4>
+                          <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
                             {catData.count} records
                           </p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                           <div>
-                            <p style={{ fontSize: '0.65rem', color: '#4ade80', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
-                            <p style={{ fontSize: '0.65rem', color: '#f87171', margin: 0 }}>Out: ₹{catData.cashOut}</p>
+                            <p style={{ fontSize: '0.65rem', color: '#10b981', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
+                            <p style={{ fontSize: '0.65rem', color: '#ef4444', margin: 0 }}>Out: ₹{catData.cashOut}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 0.1rem 0' }}>Remaining</p>
-                            <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#4ade80' : '#f87171', margin: 0 }}>₹{netCatBalance.toFixed(2)}</p>
+                            <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: '0 0 0.1rem 0' }}>Remaining</p>
+                            <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                              <AnimatedCounter value={netCatBalance} />
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1764,9 +1966,9 @@ export default function Dashboard({ user, onLogout }) {
                           setEditingCollectionName(item.name);
                           setShowEditCollectionPage(true);
                         }}
-                        style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                        style={{ backgroundColor: 'transparent', border: 'none', color: t.textSecondary, cursor: 'pointer', padding: '4px' }}
                       >
-                        <Edit3 size={16} />
+                        <Edit3 size={17} />
                       </button>
                     </div>
                   );
@@ -1782,41 +1984,44 @@ export default function Dashboard({ user, onLogout }) {
                     const netCatBalance = catData.cashIn - catData.cashOut;
                     return (
                       <div key={index} style={{
-                        backgroundColor: '#0a0a0a',
-                        border: '1px solid #1f2937',
+                        backgroundColor: t.cardBg,
+                        border: `1px solid ${t.border}`,
                         borderRadius: '1.25rem',
                         padding: '1.25rem',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                        boxShadow: t.shadow
                       }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                           <div style={{
-                            width: '40px',
-                            height: '40px',
+                            width: '42px',
+                            height: '42px',
                             borderRadius: '0.875rem',
-                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.16)',
+                            border: '1px solid rgba(59, 130, 246, 0.35)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}>
-                            <Box size={20} color={item.color || "#3b82f6"} />
+                            <Box size={18} color={item.color || "#3b82f6"} />
                           </div>
                           <div>
-                            <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0' }}>{item.name}</h4>
-                            <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>
+                            <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: t.text }}>{item.name}</h4>
+                            <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
                               {catData.count} records
                             </p>
                           </div>
                           <div style={{ display: 'flex', gap: '1rem' }}>
                             <div>
-                              <p style={{ fontSize: '0.65rem', color: '#4ade80', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
-                              <p style={{ fontSize: '0.65rem', color: '#f87171', margin: 0 }}>Out: ₹{catData.cashOut}</p>
+                              <p style={{ fontSize: '0.65rem', color: '#10b981', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
+                              <p style={{ fontSize: '0.65rem', color: '#ef4444', margin: 0 }}>Out: ₹{catData.cashOut}</p>
                             </div>
                             <div>
-                              <p style={{ fontSize: '0.7rem', color: '#9ca3af', margin: '0 0 0.1rem 0' }}>Remaining</p>
-                              <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#4ade80' : '#f87171', margin: 0 }}>₹{netCatBalance.toFixed(2)}</p>
+                              <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: '0 0 0.1rem 0' }}>Remaining</p>
+                              <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                                <AnimatedCounter value={netCatBalance} />
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -1825,9 +2030,9 @@ export default function Dashboard({ user, onLogout }) {
                             setEditingCollectionName(item.name);
                             setShowEditCollectionPage(true);
                           }}
-                          style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                          style={{ backgroundColor: 'transparent', border: 'none', color: t.textSecondary, cursor: 'pointer', padding: '4px' }}
                         >
-                          <Edit3 size={16} />
+                          <Edit3 size={17} />
                         </button>
                       </div>
                     );
@@ -1843,11 +2048,11 @@ export default function Dashboard({ user, onLogout }) {
                   justifyContent: 'center',
                   flexGrow: 1
                 }}>
-                  <div style={{ marginBottom: '1rem', color: '#ffffff' }}>
+                  <div style={{ marginBottom: '1rem', color: t.text }}>
                     <Ghost size={64} strokeWidth={1.5} />
                   </div>
-                  <p style={{ color: '#ffffff', fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Custom Collections</p>
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280', maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
+                  <p style={{ color: t.text, fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Custom Collections</p>
+                  <p style={{ fontSize: '0.75rem', color: t.textMuted, maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
                     Create custom collections with categories to analyze your spending efficiently.
                   </p>
                 </div>
@@ -1866,14 +2071,14 @@ export default function Dashboard({ user, onLogout }) {
         transform: 'translateX(-50%)',
         width: '90%',
         maxWidth: '380px',
-        backgroundColor: '#0a0a0a',
-        border: '1px solid #1f2937',
+        backgroundColor: t.bottomNavBg,
+        border: `1px solid ${t.bottomNavBorder}`,
         borderRadius: '2.5rem',
         padding: '0.35rem 0.5rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: '0 20px 30px rgba(0,0,0,0.8)',
+        boxShadow: t.bottomNavShadow,
         zIndex: 10,
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)'
@@ -1883,11 +2088,11 @@ export default function Dashboard({ user, onLogout }) {
           position: 'relative',
           display: 'flex',
           flex: 1,
-          backgroundColor: '#121212',
+          backgroundColor: t.pillContainer,
           borderRadius: '2rem',
           padding: '3px',
           marginRight: '0.5rem',
-          border: '1px solid #1f2937',
+          border: `1px solid ${t.border}`,
           alignItems: 'center'
         }}>
           {/* Smooth Sliding Pill Indicator */}
@@ -1899,13 +2104,13 @@ export default function Dashboard({ user, onLogout }) {
               left: '3px',
               width: 'calc((100% - 6px) / 3)',
               transform: `translateX(${activeTabIndex * 100}%)`,
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
+              backgroundColor: t.pillActive,
+              border: `1px solid ${t.pillBorder}`,
               borderRadius: '1.75rem',
               transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
               pointerEvents: 'none',
               zIndex: 1,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+              boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.08)'
             }}
           />
 
@@ -1928,7 +2133,7 @@ export default function Dashboard({ user, onLogout }) {
                   background: 'transparent',
                   border: 'none',
                   borderRadius: '1.75rem',
-                  color: isActive ? '#ffffff' : '#9ca3af',
+                  color: isActive ? t.text : t.textSecondary,
                   cursor: 'pointer',
                   fontSize: '0.75rem',
                   fontWeight: isActive ? '700' : '500',
@@ -1939,7 +2144,7 @@ export default function Dashboard({ user, onLogout }) {
                 }}
                 className="nav-tab-btn"
               >
-                <IconComponent size={17} color={isActive ? '#ffffff' : '#9ca3af'} />
+                <IconComponent size={17} color={isActive ? t.text : t.textSecondary} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -1950,8 +2155,8 @@ export default function Dashboard({ user, onLogout }) {
         <button 
           onClick={() => setShowAddEntryModal(true)}
           style={{
-            backgroundColor: '#ffffff',
-            color: '#000000',
+            backgroundColor: t.actionBtnBg,
+            color: t.actionBtnColor,
             border: 'none',
             borderRadius: '50%',
             width: '42px',
@@ -1960,7 +2165,7 @@ export default function Dashboard({ user, onLogout }) {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(255,255,255,0.25)',
+            boxShadow: isDark ? '0 4px 14px rgba(255,255,255,0.25)' : '0 4px 14px rgba(0,0,0,0.25)',
             flexShrink: 0,
             transition: 'transform 0.15s ease',
             WebkitTapHighlightColor: 'transparent',
@@ -1972,6 +2177,7 @@ export default function Dashboard({ user, onLogout }) {
         </button>
       </div>
 
+      {/* Add New Entry Choice Modal */}
       {showAddEntryModal && (
         <div style={{
           position: 'fixed',
@@ -1979,7 +2185,7 @@ export default function Dashboard({ user, onLogout }) {
           left: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#000000',
+          backgroundColor: t.bg,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -1993,8 +2199,8 @@ export default function Dashboard({ user, onLogout }) {
             <button 
               onClick={() => setShowAddEntryModal(false)}
               style={{
-                backgroundColor: '#121212',
-                border: '1px solid #262626',
+                backgroundColor: t.secondaryCardBg,
+                border: `1px solid ${t.borderSecondary}`,
                 borderRadius: '50%',
                 width: '40px',
                 height: '40px',
@@ -2002,7 +2208,7 @@ export default function Dashboard({ user, onLogout }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#ffffff'
+                color: t.text
               }}
             >
               <X size={20} />
@@ -2023,19 +2229,19 @@ export default function Dashboard({ user, onLogout }) {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              backgroundColor: '#ffffff',
-              color: '#000000',
+              backgroundColor: t.actionBtnBg,
+              color: t.actionBtnColor,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '1.25rem',
-              boxShadow: '0 0 25px rgba(255,255,255,0.25)'
+              boxShadow: isDark ? '0 0 25px rgba(255,255,255,0.25)' : '0 0 25px rgba(0,0,0,0.15)'
             }}>
               <Plus size={36} strokeWidth={2.5} />
             </div>
 
-            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#ffffff', margin: '0 0 0.5rem 0' }}>Add New Entry</h3>
-            <p style={{ fontSize: '0.85rem', color: '#9ca3af', maxWidth: '280px', margin: '0 0 2rem 0', lineHeight: '1.4' }}>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: t.text, margin: '0 0 0.5rem 0' }}>Add New Entry</h3>
+            <p style={{ fontSize: '0.85rem', color: t.textSecondary, maxWidth: '280px', margin: '0 0 2rem 0', lineHeight: '1.4' }}>
               Create a new collection or add a spending entry.
             </p>
 
@@ -2052,8 +2258,8 @@ export default function Dashboard({ user, onLogout }) {
                   setShowAddRecordPage(true);
                 }}
                 style={{
-                  backgroundColor: '#0a0a0a',
-                  border: '1px solid #1f2937',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
                   borderRadius: '1.25rem',
                   padding: '1.25rem 1rem',
                   display: 'flex',
@@ -2062,23 +2268,25 @@ export default function Dashboard({ user, onLogout }) {
                   justifyContent: 'space-between',
                   minHeight: '130px',
                   cursor: 'pointer',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  boxShadow: t.shadow
                 }}
               >
                 <div style={{
                   width: '40px',
                   height: '40px',
                   borderRadius: '0.875rem',
-                  backgroundColor: 'rgba(74, 222, 128, 0.15)',
+                  backgroundColor: 'rgba(16, 185, 129, 0.16)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <Receipt size={20} color="#4ade80" />
+                  <Receipt size={20} color="#10b981" />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff', margin: '0 0 0.2rem 0' }}>Spending Record</h4>
-                  <p style={{ fontSize: '0.68rem', color: '#9ca3af', margin: 0, lineHeight: '1.2' }}>Add incoming or outgoing</p>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: t.text, margin: '0 0 0.2rem 0' }}>Spending Record</h4>
+                  <p style={{ fontSize: '0.68rem', color: t.textSecondary, margin: 0, lineHeight: '1.2' }}>Add incoming or outgoing</p>
                 </div>
               </div>
 
@@ -2088,8 +2296,8 @@ export default function Dashboard({ user, onLogout }) {
                   setShowEditCollectionPage(true);
                 }}
                 style={{
-                  backgroundColor: '#0a0a0a',
-                  border: '1px solid #1f2937',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
                   borderRadius: '1.25rem',
                   padding: '1.25rem 1rem',
                   display: 'flex',
@@ -2098,14 +2306,16 @@ export default function Dashboard({ user, onLogout }) {
                   justifyContent: 'space-between',
                   minHeight: '130px',
                   cursor: 'pointer',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  boxShadow: t.shadow
                 }}
               >
                 <div style={{
                   width: '40px',
                   height: '40px',
                   borderRadius: '0.875rem',
-                  backgroundColor: 'rgba(244, 63, 94, 0.15)',
+                  backgroundColor: 'rgba(244, 63, 94, 0.16)',
+                  border: '1px solid rgba(244, 63, 94, 0.35)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -2113,8 +2323,8 @@ export default function Dashboard({ user, onLogout }) {
                   <Folder size={20} color="#f43f5e" />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff', margin: '0 0 0.2rem 0' }}>Collection Category</h4>
-                  <p style={{ fontSize: '0.68rem', color: '#9ca3af', margin: 0, lineHeight: '1.2' }}>Organize into custom groups</p>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: t.text, margin: '0 0 0.2rem 0' }}>Collection Category</h4>
+                  <p style={{ fontSize: '0.68rem', color: t.textSecondary, margin: 0, lineHeight: '1.2' }}>Organize into custom groups</p>
                 </div>
               </div>
             </div>
@@ -2125,12 +2335,12 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setShowAddEntryModal(false)}
               style={{
                 width: '100%',
-                backgroundColor: '#0a0a0a',
-                color: '#ffffff',
+                backgroundColor: t.cardBg,
+                color: t.text,
                 fontWeight: '600',
                 padding: '0.9rem 1rem',
                 borderRadius: '2.5rem',
-                border: '1px solid #1f2937',
+                border: `1px solid ${t.border}`,
                 cursor: 'pointer',
                 fontSize: '0.95rem'
               }}
@@ -2141,6 +2351,7 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       )}
 
+      {/* Settings Modal (Updated: Switch Theme, Sign Out, Delete Account, About Developer) */}
       {showSettingsModal && (
         <div style={{
           position: 'fixed',
@@ -2148,7 +2359,7 @@ export default function Dashboard({ user, onLogout }) {
           left: '0',
           width: '100vw',
           height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(0, 0, 0, 0.45)',
           backdropFilter: 'blur(4px)',
           display: 'flex',
           flexDirection: 'column',
@@ -2160,7 +2371,7 @@ export default function Dashboard({ user, onLogout }) {
           <div 
             className="bottom-sheet-anim"
             style={{
-              backgroundColor: '#121212',
+              backgroundColor: t.secondaryCardBg,
               borderTopLeftRadius: '2rem',
               borderTopRightRadius: '2rem',
               padding: '1.5rem 1.25rem 2.5rem 1.25rem',
@@ -2168,21 +2379,74 @@ export default function Dashboard({ user, onLogout }) {
               maxWidth: '380px',
               marginInline: 'auto',
               boxSizing: 'border-box',
-              boxShadow: '0 -10px 30px rgba(0,0,0,0.8)'
+              boxShadow: isDark ? '0 -10px 30px rgba(0,0,0,0.8)' : '0 -10px 30px rgba(0,0,0,0.15)',
+              borderTop: `1px solid ${t.borderSecondary}`
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{
               width: '40px',
               height: '4px',
-              backgroundColor: '#374151',
+              backgroundColor: t.borderSecondary,
               borderRadius: '2px',
               margin: '0 auto 1.25rem auto'
             }}></div>
 
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff', margin: '0 0 1.25rem 0' }}>Settings</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: t.text, margin: '0 0 1.25rem 0' }}>Settings</h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              
+              {/* 1. SWITCH THEME */}
+              <div 
+                onClick={toggleTheme}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '1rem',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '0.75rem',
+                    backgroundColor: isDark ? 'rgba(250, 204, 21, 0.15)' : 'rgba(79, 70, 229, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: isDark ? '#facc15' : '#4f46e5'
+                  }}>
+                    {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: t.text, margin: '0 0 0.15rem 0' }}>
+                      Switch Theme
+                    </h4>
+                    <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
+                      Current: <strong style={{ color: isDark ? '#facc15' : '#4f46e5' }}>{isDark ? 'Dark Mode' : 'Light Mode'}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '1rem',
+                  backgroundColor: isDark ? '#1f2937' : '#e2e8f0',
+                  color: t.text,
+                  fontSize: '0.75rem',
+                  fontWeight: '700'
+                }}>
+                  {isDark ? 'Dark 🌙' : 'Light ☀️'}
+                </div>
+              </div>
+
+              {/* 2. SIGN OUT */}
               <div 
                 onClick={onLogout}
                 style={{
@@ -2191,18 +2455,31 @@ export default function Dashboard({ user, onLogout }) {
                   gap: '1rem',
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
               >
-                <LogOut size={20} color="#3b82f6" />
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '0.75rem',
+                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#3b82f6'
+                }}>
+                  <LogOut size={20} />
+                </div>
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ffffff', margin: '0 0 0.15rem 0' }}>Sign Out</h4>
-                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Safely close current finance database session</p>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: t.text, margin: '0 0 0.15rem 0' }}>Sign Out</h4>
+                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Safely close current finance database session</p>
                 </div>
               </div>
 
+              {/* 3. DELETE ACCOUNT */}
               <div 
                 onClick={handleDeleteAccount}
                 style={{
@@ -2211,17 +2488,66 @@ export default function Dashboard({ user, onLogout }) {
                   gap: '1rem',
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
               >
-                <Trash2 size={20} color="#f87171" />
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '0.75rem',
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ef4444'
+                }}>
+                  <Trash2 size={20} />
+                </div>
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#f87171', margin: '0 0 0.15rem 0' }}>Delete Account</h4>
-                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>Permanently erase all your data and collections</p>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ef4444', margin: '0 0 0.15rem 0' }}>Delete Account</h4>
+                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Permanently erase all your data and collections</p>
                 </div>
               </div>
+
+              {/* 4. ABOUT DEVELOPER */}
+              <div 
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setShowDeveloperPage(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '1rem',
+                  backgroundColor: t.cardBg,
+                  border: `1px solid ${t.border}`,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '0.75rem',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#10b981'
+                }}>
+                  <Code size={20} />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: t.text, margin: '0 0 0.15rem 0' }}>About Developer</h4>
+                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Meet Nikhil Gupta & explore portfolio</p>
+                </div>
+              </div>
+
             </div>
 
           </div>
