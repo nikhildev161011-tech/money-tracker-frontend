@@ -5,7 +5,9 @@ import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
 
 export default function Login({ onGoogleLogin }) {
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return localStorage.getItem('has_seen_onboarding') !== 'true';
+  });
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -56,7 +58,14 @@ export default function Login({ onGoogleLogin }) {
   };
 
   if (showOnboarding) {
-    return <Onboarding onFinish={() => setShowOnboarding(false)} />;
+    return (
+      <Onboarding 
+        onFinish={() => {
+          localStorage.setItem('has_seen_onboarding', 'true');
+          setShowOnboarding(false);
+        }} 
+      />
+    );
   }
 
   return (
@@ -75,7 +84,11 @@ export default function Login({ onGoogleLogin }) {
       overflowX: 'hidden',
       position: 'relative',
       opacity: imageLoaded ? 1 : 0,
-      transition: 'opacity 0.4s ease-in'
+      transition: 'opacity 0.4s ease-in',
+      WebkitUserSelect: 'none',
+      userSelect: 'none',
+      WebkitTouchCallout: 'none',
+      WebkitTapHighlightColor: 'transparent'
     }}>
       
       <style>{`
@@ -83,9 +96,6 @@ export default function Login({ onGoogleLogin }) {
           outline: none !important;
           -webkit-tap-highlight-color: transparent !important;
           -webkit-touch-callout: none !important;
-        }
-
-        body, button, div, span, h1, p, label {
           -webkit-user-select: none !important;
           user-select: none !important;
         }
@@ -225,8 +235,6 @@ export default function Login({ onGoogleLogin }) {
                 width: '100%',
                 transition: 'all 0.2s ease'
               }}
-              onMouseOver={(e) => e.target.style.borderColor = '#71717a'}
-              onMouseOut={(e) => e.target.style.borderColor = '#3f3f46'}
             >
               Okay
             </button>
