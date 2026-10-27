@@ -1,5 +1,5 @@
 // Component: Login
-// Description: Ultra-polished fintech authentication screen featuring optimized responsive 3D asset sizing, premium tilt-floating animation, and unified liquid-glass buttons.
+// Description: Ultra-polished fintech authentication screen with native app feel (no blue borders, no tap highlights, text-select disabled), 3D assets, and unified buttons.
 
 import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
@@ -72,7 +72,21 @@ export default function Login({ onGoogleLogin }) {
     }}>
       
       <style>{`
-        /* Premium 3D Tilt and Float Animation (No Zoom/Scaling) */
+        /* --- NATIVE APP FEEL FIXES --- */
+        /* Remove all browser default focus blue borders and tap highlights */
+        * {
+          outline: none !important;
+          -webkit-tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none !important;
+        }
+
+        /* Prevent accidental text selection and copy popups across the UI */
+        body, button, div, span, h1, p, label {
+          -webkit-user-select: none !important;
+          user-select: none !important;
+        }
+
+        /* Premium 3D Tilt and Float Animation */
         @keyframes floatAndTilt {
           0%, 100% {
             transform: translateY(0px) rotate(0deg) perspective(1000px) rotateX(0deg) rotateY(0deg);
