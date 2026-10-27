@@ -6,7 +6,7 @@ export default function Splash({ onFinish }) {
       if (onFinish) {
         onFinish();
       }
-    }, 3200);
+    }, 5500);
 
     return () => clearTimeout(timer);
   }, [onFinish]);
@@ -27,31 +27,24 @@ export default function Splash({ onFinish }) {
     }}>
       
       <style>{`
-        @keyframes tossAndRise {
+        @keyframes fadeInScale {
           0% {
-            transform: translateY(70px) scale(0.3) rotate(-20deg);
+            transform: scale(0.9);
             opacity: 0;
-          }
-          60% {
-            transform: translateY(-12px) scale(1.08) rotate(6deg);
-            opacity: 1;
+            filter: blur(8px);
           }
           100% {
-            transform: translateY(0px) scale(1) rotate(0deg);
+            transform: scale(1);
             opacity: 1;
+            filter: blur(0px);
           }
         }
 
         @keyframes posterRiseText {
           0% {
-            transform: translateY(50px) scale(0.85);
+            transform: translateY(30px) scale(0.95);
             opacity: 0;
-            filter: blur(8px);
-          }
-          60% {
-            transform: translateY(-5px) scale(1.03);
-            opacity: 1;
-            filter: blur(0px);
+            filter: blur(6px);
           }
           100% {
             transform: translateY(0px) scale(1);
@@ -60,73 +53,39 @@ export default function Splash({ onFinish }) {
           }
         }
 
-        .dollar-coin-1 {
-          animation: tossAndRise 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        .dollar-coin-2 {
-          animation: tossAndRise 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.2s;
-          opacity: 0;
-        }
-        .dollar-coin-3 {
-          animation: tossAndRise 1.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.4s;
-          opacity: 0;
+        .splash-video-container {
+          animation: fadeInScale 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          width: 300px;
+          height: 300px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          margin-bottom: 1rem;
         }
 
         .poster-title {
-          animation: posterRiseText 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.5s;
+          animation: posterRiseText 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.3s;
           opacity: 0;
         }
       `}</style>
 
-      {/* Center Tossing Dollar Coins */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '18px', marginBottom: '2.5rem' }}>
-        
-        <div className="dollar-coin-1" style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          backgroundColor: '#10b981',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 12px 30px rgba(16, 185, 129, 0.45)',
-          border: '2px solid rgba(255,255,255,0.35)'
-        }}>
-          <span style={{ color: '#ffffff', fontSize: '30px', fontWeight: '900' }}>$</span>
-        </div>
-
-        <div className="dollar-coin-2" style={{
-          width: '82px',
-          height: '82px',
-          borderRadius: '50%',
-          backgroundColor: '#10b981',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 18px 40px rgba(16, 185, 129, 0.55)',
-          border: '2px solid rgba(255,255,255,0.45)',
-          marginTop: '-28px'
-        }}>
-          <span style={{ color: '#ffffff', fontSize: '42px', fontWeight: '900' }}>$</span>
-        </div>
-
-        <div className="dollar-coin-3" style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          backgroundColor: '#10b981',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 12px 30px rgba(16, 185, 129, 0.45)',
-          border: '2px solid rgba(255,255,255,0.35)'
-        }}>
-          <span style={{ color: '#ffffff', fontSize: '30px', fontWeight: '900' }}>$</span>
-        </div>
-
+      <div className="splash-video-container">
+        <video 
+          src="/splash-animation.mp4" 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            objectFit: 'contain',
+            background: 'transparent'
+          }} 
+        />
       </div>
 
-      {/* Poster Style Bold Rising Title */}
       <div className="poster-title" style={{ textAlign: 'center' }}>
         <h1 style={{
           color: '#ffffff',
