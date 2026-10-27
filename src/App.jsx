@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Splash from './components/Splash';
 import Login from './components/Login';
-import ChatList from './components/ChatList';
+import Dashboard from './components/Dashboard';
 
 export default function App() {
   const [currentStep, setCurrentStep] = useState('splash');
-  const [userData, setUserData] = useState(() => {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
-      const saved = localStorage.getItem('user');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      name: '',
-      phone: '',
-      avatar: '',
-      about: 'Hey there! I am using Vortex.'
-    };
+      return localStorage.getItem('isAuth') === 'true';
+    } catch (e) {
+      return false;
+    }
   });
 
+  // PWA Service Worker Registration
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -30,55 +26,33 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (userData && userData.phone) {
-      localStorage.setItem('user', JSON.stringify(userData));
-    }
-  }, [userData]);
-
+  // Splash screen timer logic
   useEffect(() => {
     if (currentStep === 'splash') {
       const timer = setTimeout(() => {
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser);
-            if (parsed && parsed.phone) {
-              setCurrentStep('chatlist');
-              return;
-            }
-          } catch (e) {}
+        if (isAuthenticated) {
+          setCurrentStep('dashboard');
+        } else {
+          setCurrentStep('login');
         }
-        setCurrentStep('login');
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [currentStep]);
+  }, [currentStep, isAuthenticated]);
 
-  const handleLoginComplete = (data) => {
-    const updated = { ...userData, ...data };
-    setUserData(updated);
+  const handleGoogleLogin = () => {
+    setIsAuthenticated(true);
     try {
-      localStorage.setItem('user', JSON.stringify(updated));
+      localStorage.setItem('isAuth', 'true');
     } catch (e) {}
-    setCurrentStep('chatlist');
-  };
-
-  const handleUpdateUser = (newData) => {
-    setUserData(newData);
-    try {
-      localStorage.setItem('user', JSON.stringify(newData));
-    } catch (e) {}
+    setCurrentStep('dashboard');
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUserData({
-      name: '',
-      phone: '',
-      avatar: '',
-      about: 'Hey there! I am using Vortex.'
-    });
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem('isAuth');
+    } catch (e) {}
     setCurrentStep('login');
   };
 
@@ -86,13 +60,9 @@ export default function App() {
     return <Splash />;
   }
 
-  if (currentStep === 'login') {
-    return <Login onLoginComplete={handleLoginComplete} />;
+  if (currentStep === 'login' || !isAuthenticated) {
+    return <Login onGoogleLogin={handleGoogleLogin} />;
   }
 
-  if (currentStep === 'chatlist') {
-    return <ChatList userData={userData} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />;
-  }
-
-  return null;
+  return <Dashboard onLogout={handleLogout} />;
 }
