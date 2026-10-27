@@ -10,8 +10,13 @@ export default function Login({ onGoogleLogin }) {
   const [agreed, setAgreed] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
+    const img = new Image();
+    img.src = '/cards-illustration.png';
+    img.onload = () => setImageLoaded(true);
+
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -68,11 +73,12 @@ export default function Login({ onGoogleLogin }) {
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden',
-      position: 'relative'
+      position: 'relative',
+      opacity: imageLoaded ? 1 : 0,
+      transition: 'opacity 0.4s ease-in'
     }}>
       
       <style>{`
-        /* --- NATIVE APP FEEL FIXES --- */
         * {
           outline: none !important;
           -webkit-tap-highlight-color: transparent !important;
@@ -84,7 +90,6 @@ export default function Login({ onGoogleLogin }) {
           user-select: none !important;
         }
 
-        /* Premium 3D Tilt and Float Animation */
         @keyframes floatAndTilt {
           0%, 100% {
             transform: translateY(0px) rotate(0deg) perspective(1000px) rotateX(0deg) rotateY(0deg);
@@ -178,7 +183,6 @@ export default function Login({ onGoogleLogin }) {
         }
       `}</style>
 
-      {/* Refined Liquid Glass Notice Modal */}
       {error && (
         <div style={{
           position: 'fixed',
@@ -232,7 +236,6 @@ export default function Login({ onGoogleLogin }) {
 
       <div style={{ height: '5px' }}></div>
 
-      {/* Main container */}
       <div style={{
         width: '100%',
         maxWidth: '390px',
@@ -243,7 +246,6 @@ export default function Login({ onGoogleLogin }) {
         margin: 'auto 0'
       }}>
         
-        {/* Fixed 3D Fintech Asset Container with Smooth Tilt-Float Animation */}
         <div className="floating-3d-graphic" style={{ marginBottom: '1.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img 
             src="/cards-illustration.png" 
@@ -256,7 +258,6 @@ export default function Login({ onGoogleLogin }) {
           />
         </div>
 
-        {/* Modern Bold App Title */}
         <h1 style={{ 
           fontSize: '2.15rem', 
           fontWeight: '800', 
@@ -272,10 +273,8 @@ export default function Login({ onGoogleLogin }) {
           Sign in or create a secure account.
         </p>
 
-        {/* Actions */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
           
-          {/* Continue with Google Button */}
           <button 
             type="button"
             onClick={handleGoogleClick}
@@ -292,7 +291,6 @@ export default function Login({ onGoogleLogin }) {
             Continue with Google
           </button>
 
-          {/* Download Money Tracker Button */}
           <button 
             type="button"
             onClick={handleInstallClick}
@@ -306,7 +304,6 @@ export default function Login({ onGoogleLogin }) {
             Download Money Tracker
           </button>
 
-          {/* Checkbox */}
           <div style={{ textAlign: 'left', width: '100%', marginTop: '0.25rem' }}>
             <label className="checkbox-container">
               <input 
@@ -326,7 +323,6 @@ export default function Login({ onGoogleLogin }) {
 
         </div>
 
-        {/* About Developer link */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
