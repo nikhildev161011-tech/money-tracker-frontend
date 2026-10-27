@@ -1,5 +1,5 @@
 // Component: Login
-// Description: Ultra-polished fintech authentication screen with native app feel (no blue borders, no tap highlights, text-select disabled), 3D assets, and unified buttons.
+// Description: Ultra-polished fintech authentication screen with fixed 3D cards illustration asset, uniform buttons, and native app feel.
 
 import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
@@ -73,14 +73,12 @@ export default function Login({ onGoogleLogin }) {
       
       <style>{`
         /* --- NATIVE APP FEEL FIXES --- */
-        /* Remove all browser default focus blue borders and tap highlights */
         * {
           outline: none !important;
           -webkit-tap-highlight-color: transparent !important;
           -webkit-touch-callout: none !important;
         }
 
-        /* Prevent accidental text selection and copy popups across the UI */
         body, button, div, span, h1, p, label {
           -webkit-user-select: none !important;
           user-select: none !important;
@@ -245,7 +243,7 @@ export default function Login({ onGoogleLogin }) {
         margin: 'auto 0'
       }}>
         
-        {/* Optimized 3D Fintech Asset Container with Smooth Tilt-Float Animation */}
+        {/* Fixed 3D Fintech Asset Container with Smooth Tilt-Float Animation */}
         <div className="floating-3d-graphic" style={{ marginBottom: '1.5rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img 
             src="/cards-illustration.png" 
