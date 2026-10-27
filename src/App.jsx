@@ -5,12 +5,17 @@ import Dashboard from './components/Dashboard';
 
 export default function App() {
   const [currentStep, setCurrentStep] = useState('splash');
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  
+  // Save user object securely in state & localStorage
+  const [user, setUser] = useState(() => {
     try {
-      return localStorage.getItem('isAuth') === 'true';
-    } catch (e) {
-      return false;
-    }
+      const saved = localStorage.getItem('moneyTrackerUser');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      id: 'default_user_161011', // fallback unique ID for backend transactions
+      name: 'Nikhil Gupta'
+    };
   });
 
   // PWA Service Worker Registration
@@ -30,7 +35,8 @@ export default function App() {
   useEffect(() => {
     if (currentStep === 'splash') {
       const timer = setTimeout(() => {
-        if (isAuthenticated) {
+        const isAuth = localStorage.getItem('isAuth') === 'true';
+        if (isAuth) {
           setCurrentStep('dashboard');
         } else {
           setCurrentStep('login');
@@ -38,20 +44,25 @@ export default function App() {
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [currentStep, isAuthenticated]);
+  }, [currentStep]);
 
   const handleGoogleLogin = () => {
-    setIsAuthenticated(true);
+    const loggedInUser = {
+      id: 'user_' + Date.now(), // Generate unique backend user ID
+      name: 'Nikhil Gupta'
+    };
+    setUser(loggedInUser);
     try {
       localStorage.setItem('isAuth', 'true');
+      localStorage.setItem('moneyTrackerUser', JSON.stringify(loggedInUser));
     } catch (e) {}
     setCurrentStep('dashboard');
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
     try {
       localStorage.removeItem('isAuth');
+      localStorage.removeItem('moneyTrackerUser');
     } catch (e) {}
     setCurrentStep('login');
   };
@@ -60,9 +71,9 @@ export default function App() {
     return <Splash />;
   }
 
-  if (currentStep === 'login' || !isAuthenticated) {
+  if (currentStep === 'login') {
     return <Login onGoogleLogin={handleGoogleLogin} />;
   }
 
-  return <Dashboard onLogout={handleLogout} />;
+  return <Dashboard user={user} onLogout={handleLogout} />;
 }
