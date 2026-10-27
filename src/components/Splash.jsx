@@ -23,10 +23,22 @@ export default function Splash({ onFinish }) {
       margin: 0,
       overflow: 'hidden',
       position: 'relative',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      WebkitUserSelect: 'none',
+      userSelect: 'none',
+      WebkitTouchCallout: 'none',
+      WebkitTapHighlightColor: 'transparent'
     }}>
       
       <style>{`
+        * {
+          -webkit-tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
+          outline: none !important;
+        }
+
         @keyframes fadeInScale {
           0% {
             transform: scale(0.9);
@@ -62,11 +74,13 @@ export default function Splash({ onFinish }) {
           justify-content: center;
           background: transparent;
           margin-bottom: 1rem;
+          pointer-events: none;
         }
 
         .poster-title {
           animation: posterRiseText 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.3s;
           opacity: 0;
+          pointer-events: none;
         }
       `}</style>
 
@@ -81,7 +95,8 @@ export default function Splash({ onFinish }) {
             width: '100%', 
             height: '100%', 
             objectFit: 'contain',
-            background: 'transparent'
+            background: 'transparent',
+            pointerEvents: 'none'
           }} 
         />
       </div>
