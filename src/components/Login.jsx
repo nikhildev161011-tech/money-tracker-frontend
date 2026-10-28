@@ -83,11 +83,13 @@ export default function Login({ onGoogleLogin }) {
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden',
-      position: 'fixed',
-      inset: 0,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       zIndex: 9997,
-      opacity: imageLoaded ? 1 : 0,
-      transition: 'opacity 0.25s ease-in',
+      opacity: 1,
       WebkitUserSelect: 'none',
       userSelect: 'none',
       WebkitTouchCallout: 'none',
@@ -324,7 +326,7 @@ export default function Login({ onGoogleLogin }) {
               />
               <span className="checkmark"></span>
               <span style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
-                By signing up or connecting with the services above you agree to our <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Terms of Services</a> and acknowledge our <a href="#" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Privacy Policy</a> describing how we handle your personal data.
+                By signing up or connecting with the services above you agree to our <a href="/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Terms of Services</a> and acknowledge our <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Privacy Policy</a> describing how we handle your personal data.
               </span>
             </label>
           </div>
@@ -339,7 +341,7 @@ export default function Login({ onGoogleLogin }) {
           width: '100%'
         }}>
           <a 
-            href="https://my-process-omega.com" 
+            href="https://my-portfolio-omega-self-73.vercel.app/" 
             target="_blank" 
             rel="noopener noreferrer" 
             style={{ color: '#9ca3af', textDecoration: 'underline' }}
