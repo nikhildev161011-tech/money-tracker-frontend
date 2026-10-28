@@ -22,7 +22,9 @@ export default function Splash({ onFinish }) {
       justifyContent: 'center',
       margin: 0,
       overflow: 'hidden',
-      position: 'relative',
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9999,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       WebkitUserSelect: 'none',
       userSelect: 'none',
@@ -41,34 +43,30 @@ export default function Splash({ onFinish }) {
 
         @keyframes fadeInScale {
           0% {
-            transform: scale(0.9);
+            transform: scale(0.92);
             opacity: 0;
-            filter: blur(8px);
           }
           100% {
             transform: scale(1);
             opacity: 1;
-            filter: blur(0px);
           }
         }
 
         @keyframes posterRiseText {
           0% {
-            transform: translateY(30px) scale(0.95);
+            transform: translateY(20px);
             opacity: 0;
-            filter: blur(6px);
           }
           100% {
-            transform: translateY(0px) scale(1);
+            transform: translateY(0px);
             opacity: 1;
-            filter: blur(0px);
           }
         }
 
         .splash-video-container {
-          animation: fadeInScale 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          width: 300px;
-          height: 300px;
+          animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          width: 260px;
+          height: 260px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -78,7 +76,7 @@ export default function Splash({ onFinish }) {
         }
 
         .poster-title {
-          animation: posterRiseText 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.3s;
+          animation: posterRiseText 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s;
           opacity: 0;
           pointer-events: none;
         }
@@ -89,7 +87,6 @@ export default function Splash({ onFinish }) {
           src="/splash-animation.mp4" 
           autoPlay 
           muted 
-          loop 
           playsInline 
           style={{ 
             width: '100%', 
@@ -109,7 +106,6 @@ export default function Splash({ onFinish }) {
           letterSpacing: '-0.04em',
           margin: 0,
           textTransform: 'uppercase',
-          textShadow: '0 10px 30px rgba(255, 255, 255, 0.25)',
           background: 'linear-gradient(180deg, #ffffff 40%, #9ca3af 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
