@@ -1,6 +1,3 @@
-// Component: Dashboard
-// Description: Ultra-polished fintech dashboard with native app feel, smooth pill animations, custom toasts, and clean professional icons.
-
 import React, { useState, useEffect } from 'react';
 import { 
   Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, 
@@ -12,10 +9,20 @@ import {
 } from 'lucide-react';
 
 function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 }) {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(() => {
+    const hasAnimated = sessionStorage.getItem('has_animated_counter');
+    return hasAnimated === 'true' ? Number(value) || 0 : 0;
+  });
 
   useEffect(() => {
     const endVal = Number(value) || 0;
+    const hasAnimated = sessionStorage.getItem('has_animated_counter');
+
+    if (hasAnimated === 'true') {
+      setDisplayValue(endVal);
+      return;
+    }
+
     const startTime = performance.now();
     let frameId;
 
@@ -30,6 +37,7 @@ function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 
         frameId = requestAnimationFrame(animate);
       } else {
         setDisplayValue(endVal);
+        sessionStorage.setItem('has_animated_counter', 'true');
       }
     };
 
@@ -44,7 +52,7 @@ function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 
   });
 
   return (
-    <span>
+    <span style={{ fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
       {isNeg ? `-${prefix}${absFormatted}` : `${prefix}${absFormatted}`}
     </span>
   );
@@ -116,7 +124,6 @@ export default function Dashboard({ user, onLogout }) {
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
-
   const tabList = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'analysis', label: 'Analysis', icon: BarChart2 },
@@ -318,20 +325,20 @@ export default function Dashboard({ user, onLogout }) {
   const [selectedDay, setSelectedDay] = useState('Sun');
 
   const prebuiltCategories = [
-    { name: 'Salary & Income', type: 'Prebuild', icon: <Landmark size={18} color="#10b981" />, color: 'rgba(16, 185, 129, 0.16)', borderColor: 'rgba(16, 185, 129, 0.35)' },
-    { name: 'Entertainment & Leisure', type: 'Prebuild', icon: <Gamepad2 size={18} color="#a855f7" />, color: 'rgba(168, 85, 247, 0.16)', borderColor: 'rgba(168, 85, 247, 0.35)' },
-    { name: 'Food & Dining', type: 'Prebuild', icon: <UtensilsCrossed size={18} color="#f59e0b" />, color: 'rgba(245, 158, 11, 0.16)', borderColor: 'rgba(245, 158, 11, 0.35)' },
-    { name: 'Transport & Logistics', type: 'Prebuild', icon: <CarFront size={18} color="#3b82f6" />, color: 'rgba(59, 130, 246, 0.16)', borderColor: 'rgba(59, 130, 246, 0.35)' },
-    { name: 'General', type: 'Prebuild', icon: <Sparkles size={18} color="#6366f1" />, color: 'rgba(99, 102, 241, 0.16)', borderColor: 'rgba(99, 102, 241, 0.35)' },
-    { name: 'Health & Care', type: 'Prebuild', icon: <HeartPulse size={18} color="#f43f5e" />, color: 'rgba(244, 63, 94, 0.16)', borderColor: 'rgba(244, 63, 94, 0.35)' }
+    { name: 'Salary & Income', type: 'Prebuild', icon: <Landmark size={18} color="#10b981" />, color: 'transparent', borderColor: 'transparent' },
+    { name: 'Entertainment & Leisure', type: 'Prebuild', icon: <Gamepad2 size={18} color="#a855f7" />, color: 'transparent', borderColor: 'transparent' },
+    { name: 'Food & Dining', type: 'Prebuild', icon: <UtensilsCrossed size={18} color="#f59e0b" />, color: 'transparent', borderColor: 'transparent' },
+    { name: 'Transport & Logistics', type: 'Prebuild', icon: <CarFront size={18} color="#3b82f6" />, color: 'transparent', borderColor: 'transparent' },
+    { name: 'General', type: 'Prebuild', icon: <Sparkles size={18} color="#6366f1" />, color: 'transparent', borderColor: 'transparent' },
+    { name: 'Health & Care', type: 'Prebuild', icon: <HeartPulse size={18} color="#f43f5e" />, color: 'transparent', borderColor: 'transparent' }
   ];
 
   const ownedCategoriesList = ownedCollections.map(item => ({
     name: item.name,
     type: 'Owned',
     icon: <Box size={18} color={item.color || "#3b82f6"} />,
-    color: 'rgba(59, 130, 246, 0.16)',
-    borderColor: 'rgba(59, 130, 246, 0.35)'
+    color: 'transparent',
+    borderColor: 'transparent'
   }));
 
   const categoriesList = [...prebuiltCategories, ...ownedCategoriesList];
@@ -1103,7 +1110,6 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
-
   if (showFilterPage) {
     return (
       <div style={{
@@ -1263,6 +1269,7 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   return (
     <div style={{
       width: '100vw',
@@ -1553,7 +1560,7 @@ export default function Dashboard({ user, onLogout }) {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#10b981' : '#ef4444' }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '2px' }}>
                             {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
                           </span>
                           <button 
@@ -1799,8 +1806,8 @@ export default function Dashboard({ user, onLogout }) {
                 {[...prebuiltCategories, ...ownedCollections.map(item => ({ 
                   title: item.name, 
                   icon: <Box size={18} color={item.color || "#3b82f6"} />, 
-                  color: 'rgba(59, 130, 246, 0.16)',
-                  borderColor: 'rgba(59, 130, 246, 0.35)'
+                  color: 'transparent',
+                  borderColor: 'transparent'
                 }))].map((item, index) => {
                   const catName = item.name || item.title;
                   const catData = categorySummary[catName] || { cashIn: 0, cashOut: 0, count: 0 };
@@ -1821,8 +1828,8 @@ export default function Dashboard({ user, onLogout }) {
                           width: '42px',
                           height: '42px',
                           borderRadius: '0.875rem',
-                          backgroundColor: item.color,
-                          border: `1px solid ${item.borderColor}`,
+                          backgroundColor: 'transparent',
+                          border: 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center'
@@ -1884,8 +1891,8 @@ export default function Dashboard({ user, onLogout }) {
                           width: '42px',
                           height: '42px',
                           borderRadius: '0.875rem',
-                          backgroundColor: item.color,
-                          border: `1px solid ${item.borderColor}`,
+                          backgroundColor: 'transparent',
+                          border: 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center'
@@ -1948,8 +1955,8 @@ export default function Dashboard({ user, onLogout }) {
                             width: '42px',
                             height: '42px',
                             borderRadius: '0.875rem',
-                            backgroundColor: 'rgba(59, 130, 246, 0.16)',
-                            border: '1px solid rgba(59, 130, 246, 0.35)',
+                            backgroundColor: 'transparent',
+                            border: 'none',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
@@ -2384,9 +2391,12 @@ export default function Dashboard({ user, onLogout }) {
                   backgroundColor: isDark ? '#1f2937' : '#e2e8f0',
                   color: t.text,
                   fontSize: '0.75rem',
-                  fontWeight: '700'
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  {isDark ? 'Dark 🌙' : 'Light ☀️'}
+                  {isDark ? <Moon size={14} /> : <Sun size={14} />} {isDark ? 'Dark' : 'Light'}
                 </div>
               </div>
 
@@ -2571,4 +2581,3 @@ export default function Dashboard({ user, onLogout }) {
     </div>
   );
 }
-  
