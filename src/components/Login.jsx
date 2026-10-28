@@ -47,6 +47,7 @@ export default function Login({ onGoogleLogin }) {
 
   const handleGoogleClick = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!agreed) {
       setError('Please agree to the Terms of Services and Privacy Policy to continue.');
       return;
@@ -82,9 +83,11 @@ export default function Login({ onGoogleLogin }) {
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden',
-      position: 'relative',
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9997,
       opacity: imageLoaded ? 1 : 0,
-      transition: 'opacity 0.4s ease-in',
+      transition: 'opacity 0.25s ease-in',
       WebkitUserSelect: 'none',
       userSelect: 'none',
       WebkitTouchCallout: 'none',
@@ -102,14 +105,14 @@ export default function Login({ onGoogleLogin }) {
 
         @keyframes floatAndTilt {
           0%, 100% {
-            transform: translateY(0px) rotate(0deg) perspective(1000px) rotateX(0deg) rotateY(0deg);
+            transform: translateY(0px) rotate(0deg);
           }
           50% {
-            transform: translateY(-12px) rotate(3deg) perspective(1000px) rotateX(4deg) rotateY(-4deg);
+            transform: translateY(-8px) rotate(1.5deg);
           }
         }
         .floating-3d-graphic {
-          animation: floatAndTilt 5s ease-in-out infinite;
+          animation: floatAndTilt 4s ease-in-out infinite;
           transform-style: preserve-3d;
         }
 
@@ -128,13 +131,12 @@ export default function Login({ onGoogleLogin }) {
           font-weight: 500;
           font-size: 0.95rem;
           cursor: pointer;
-          transition: all 0.25s ease;
+          transition: all 0.2s ease;
         }
 
         .auth-btn:hover {
           background-color: #1a1a1e;
           border-color: #3f3f46;
-          transform: translateY(-1px);
         }
 
         .checkbox-container {
@@ -169,7 +171,6 @@ export default function Login({ onGoogleLogin }) {
         .checkbox-container input:checked ~ .checkmark {
           background-color: #2563eb;
           border-color: #2563eb;
-          transform: scale(1.05);
         }
 
         .checkmark:after {
@@ -232,8 +233,7 @@ export default function Login({ onGoogleLogin }) {
                 fontWeight: '500',
                 fontSize: '0.9rem',
                 cursor: 'pointer',
-                width: '100%',
-                transition: 'all 0.2s ease'
+                width: '100%'
               }}
             >
               Okay
@@ -339,7 +339,7 @@ export default function Login({ onGoogleLogin }) {
           width: '100%'
         }}>
           <a 
-            href="https://my-portfolio-omega-self-73.vercel.app/" 
+            href="https://my-process-omega.com" 
             target="_blank" 
             rel="noopener noreferrer" 
             style={{ color: '#9ca3af', textDecoration: 'underline' }}
