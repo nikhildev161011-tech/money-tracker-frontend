@@ -76,6 +76,9 @@ export default function Onboarding({ onFinish }) {
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden',
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9998,
       WebkitUserSelect: 'none',
       userSelect: 'none',
       WebkitTouchCallout: 'none',
@@ -92,9 +95,9 @@ export default function Onboarding({ onFinish }) {
         }
 
         @keyframes floatEffect {
-          0% { transform: translateY(0px) scale(1) rotate(0deg); }
-          50% { transform: translateY(-10px) scale(1.03) rotate(0.5deg); }
-          100% { transform: translateY(0px) scale(1) rotate(0deg); }
+          0% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-8px) scale(1.02); }
+          100% { transform: translateY(0px) scale(1); }
         }
         .onboarding-asset-anim {
           animation: floatEffect 4s ease-in-out infinite;
@@ -102,15 +105,14 @@ export default function Onboarding({ onFinish }) {
         }
 
         @keyframes contentFadeIn {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .onboarding-slide-wrapper {
-          animation: contentFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: contentFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
 
-      {/* Top Header: Skip Button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <button 
           type="button"
@@ -140,11 +142,10 @@ export default function Onboarding({ onFinish }) {
       }}>
         
         <div className="onboarding-asset-anim" style={{
-          marginBottom: '2.5rem',
+          marginBottom: '2rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          filter: 'drop-shadow(0 20px 30px rgba(0, 0, 0, 0.8))',
           minHeight: '180px'
         }}>
           <img 
