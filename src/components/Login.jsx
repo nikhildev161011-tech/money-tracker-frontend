@@ -1,6 +1,3 @@
-// Component: Login
-// Description: Ultra-polished fintech authentication screen with fixed 3D cards illustration asset, uniform buttons, and native app feel.
-
 import React, { useState, useEffect } from 'react';
 import Onboarding from './Onboarding';
 
@@ -17,7 +14,12 @@ export default function Login({ onGoogleLogin }) {
   useEffect(() => {
     const img = new Image();
     img.src = '/cards-illustration.png';
-    img.onload = () => setImageLoaded(true);
+    img.onload = () => {
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      setImageLoaded(true);
+    };
 
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
@@ -83,13 +85,11 @@ export default function Login({ onGoogleLogin }) {
       boxSizing: 'border-box',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
+      position: 'fixed',
+      inset: 0,
       zIndex: 9997,
-      opacity: 1,
+      opacity: imageLoaded ? 1 : 0,
+      transition: 'opacity 0.3s ease-in-out',
       WebkitUserSelect: 'none',
       userSelect: 'none',
       WebkitTouchCallout: 'none',
