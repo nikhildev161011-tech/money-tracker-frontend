@@ -124,6 +124,7 @@ export default function Dashboard({ user, onLogout }) {
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
+
   const tabList = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'analysis', label: 'Analysis', icon: BarChart2 },
@@ -816,6 +817,7 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   if (showEditCollectionPage) {
     return (
       <div style={{
@@ -1012,7 +1014,6 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
-
   if (showSummaryPage) {
     return (
       <div style={{
@@ -1110,6 +1111,7 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   if (showFilterPage) {
     return (
       <div style={{
@@ -1378,15 +1380,17 @@ export default function Dashboard({ user, onLogout }) {
             width: '42px',
             height: '42px',
             borderRadius: '50%',
-            backgroundColor: isDark ? '#1f2937' : '#e0e7ff',
+            backgroundColor: '#000000',
             overflow: 'hidden',
-            border: `1px solid ${isDark ? '#374151' : '#c7d2fe'}`,
+            border: `1px solid ${isDark ? '#262626' : '#cbd5e1'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 'bold',
-            color: '#3b82f6',
-            fontSize: '1rem'
+            background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 100%)',
+            color: '#ffffff',
+            fontSize: '1rem',
+            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.15)'
           }}>
             {user.name.charAt(0)}
           </div>
@@ -1560,8 +1564,9 @@ export default function Dashboard({ user, onLogout }) {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                            {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
+                          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
+                            <span>{txn.type === 'cashIn' ? '+' : '-'}</span>
+                            <span>₹{txn.amount}</span>
                           </span>
                           <button 
                             onClick={() => handleDeleteTransaction(txn._id)}
@@ -1602,7 +1607,6 @@ export default function Dashboard({ user, onLogout }) {
             )}
           </>
         )}
-
         {/* ANALYSIS TAB */}
         {activeTab === 'analysis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -2357,7 +2361,7 @@ export default function Dashboard({ user, onLogout }) {
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
                   backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
+                  border: 'none',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
@@ -2409,7 +2413,7 @@ export default function Dashboard({ user, onLogout }) {
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
                   backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
+                  border: 'none',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
@@ -2444,7 +2448,7 @@ export default function Dashboard({ user, onLogout }) {
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
                   backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
+                  border: 'none',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
@@ -2479,7 +2483,7 @@ export default function Dashboard({ user, onLogout }) {
                   padding: '0.85rem 1rem',
                   borderRadius: '1rem',
                   backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
+                  border: 'none',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
