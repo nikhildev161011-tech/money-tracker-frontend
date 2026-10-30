@@ -80,7 +80,6 @@ export default function AIAssistant({ onClose }) {
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -132,7 +131,6 @@ export default function AIAssistant({ onClose }) {
         </button>
       </div>
 
-      {/* Messages List */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
@@ -176,7 +174,6 @@ export default function AIAssistant({ onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Fixed Bottom Input Bar - ऊपर उठाया गया ताकि नीचे से न कटे */}
       <div style={{
         position: 'fixed',
         bottom: '1rem',
