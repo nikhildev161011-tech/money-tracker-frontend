@@ -87,5 +87,5 @@ router.post('/process-ai', async (req, res) => {
     res.status(500).json({ success: false, error: 'Rohix encountered an issue understanding the request. Please try again.' });
   }
 });
-
+export default AIAssistant;
 module.exports = router;
