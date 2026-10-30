@@ -5,7 +5,7 @@ export default function AIAssistant({ onClose }) {
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: "नमस्ते! मैं रोहिक्स (Rohix) हूँ, आपका पर्सनल फाइनेंस असिस्टेंट। बताइए, आज आपके किस खर्चे या बजट में मदद करूँ?"
+      text: "Hello! I am Rohix, your personal finance assistant. How can I help you with your budget or expenses today?"
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -104,7 +104,7 @@ export default function AIAssistant({ onClose }) {
           }}>
             <Bot size={20} />
           </div>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, letterSpacing: '0.02em' }}>Rohix AI असिस्टेंट</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, letterSpacing: '0.02em' }}>Rohix AI Assistant</h2>
         </div>
 
         <button 
@@ -219,7 +219,7 @@ export default function AIAssistant({ onClose }) {
 
           <input 
             type="text"
-            placeholder="खर्च के बारे में पूछें..."
+            placeholder="Ask about expenses..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             style={{
