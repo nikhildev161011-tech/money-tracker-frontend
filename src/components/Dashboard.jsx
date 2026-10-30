@@ -12,7 +12,6 @@ import {
 function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 }) {
   const [displayValue, setDisplayValue] = useState(() => {
     const hasAnimated = sessionStorage.getItem('has_animated_counter');
-    
     return hasAnimated === 'true' ? Number(value) || 0 : 0;
   });
 
@@ -59,7 +58,6 @@ function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 
     </span>
   );
 }
-
 export default function Dashboard({ user, onLogout }) {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('app_theme') || 'dark';
@@ -107,6 +105,7 @@ export default function Dashboard({ user, onLogout }) {
   
   const [showAddEntryModal, setShowAddEntryModal] = useState(false);
   const [showAddRecordPage, setShowAddRecordPage] = useState(false);
+  const [showAiChat, setShowAiChat] = useState(false);
   
   const [recordType, setRecordType] = useState('cashIn');
   const [recordDesc, setRecordDesc] = useState('');
@@ -1273,7 +1272,6 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
-
   return (
     <div style={{
       width: '100vw',
@@ -1433,7 +1431,6 @@ export default function Dashboard({ user, onLogout }) {
         style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}
       >
         
-        {/* HOME TAB */}
         {activeTab === 'home' && (
           <>
             <div 
@@ -1609,7 +1606,7 @@ export default function Dashboard({ user, onLogout }) {
             )}
           </>
         )}
-        {/* ANALYSIS TAB */}
+
         {activeTab === 'analysis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Insights & Analytics</h2>
@@ -1742,7 +1739,6 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         )}
 
-        {/* VAULTS / COLLECTIONS TAB */}
         {activeTab === 'collection' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Collections & Vaults</h2>
@@ -2026,7 +2022,34 @@ export default function Dashboard({ user, onLogout }) {
 
       </div>
 
-      {/* Floating Animated Bottom Navigation Bar */}
+      <div style={{
+        position: 'fixed',
+        bottom: '5.2rem',
+        right: '1.5rem',
+        zIndex: 999
+      }}>
+        <button 
+          onClick={() => setShowAiChat(true)}
+          style={{
+            backgroundColor: '#2563eb',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '50%',
+            width: '48px',
+            height: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)',
+            transition: 'transform 0.2s ease'
+          }}
+          title="Rohix AI Assistant"
+        >
+          <Sparkles size={22} />
+        </button>
+      </div>
+
       <div style={{
         position: 'fixed',
         bottom: '1.25rem',
@@ -2583,7 +2606,8 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
       )}
-      <AIAssistant />
+
+      {showAiChat && <AIAssistant onClose={() => setShowAiChat(false)} />}
 
     </div>
   );
