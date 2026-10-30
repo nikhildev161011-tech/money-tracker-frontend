@@ -12,6 +12,7 @@ import {
 function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 }) {
   const [displayValue, setDisplayValue] = useState(() => {
     const hasAnimated = sessionStorage.getItem('has_animated_counter');
+    
     return hasAnimated === 'true' ? Number(value) || 0 : 0;
   });
 
@@ -58,6 +59,7 @@ function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 
     </span>
   );
 }
+
 export default function Dashboard({ user, onLogout }) {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('app_theme') || 'dark';
@@ -105,7 +107,6 @@ export default function Dashboard({ user, onLogout }) {
   
   const [showAddEntryModal, setShowAddEntryModal] = useState(false);
   const [showAddRecordPage, setShowAddRecordPage] = useState(false);
-  const [showAiChat, setShowAiChat] = useState(false); // AI चैट को कंट्रोल करने के लिए स्टेट
   
   const [recordType, setRecordType] = useState('cashIn');
   const [recordDesc, setRecordDesc] = useState('');
@@ -1015,7 +1016,6 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
-
   if (showSummaryPage) {
     return (
       <div style={{
@@ -1273,6 +1273,7 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   return (
     <div style={{
       width: '100vw',
@@ -1374,6 +1375,34 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       )}
 
+      {/* Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%', maxWidth: '380px', marginInline: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '50%',
+            backgroundColor: '#000000',
+            overflow: 'hidden',
+            border: `1px solid ${isDark ? '#262626' : '#cbd5e1'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 100%)',
+            color: '#ffffff',
+            fontSize: '1rem',
+            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.15)'
+          }}>
+            {user.name.charAt(0)}
+          </div>
+          <div>
+            <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Hello,</p>
+            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: t.text, margin: 0 }}>{user.name}</h1>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
           <button 
             onClick={() => setShowSettingsModal(true)}
             style={{
@@ -1404,6 +1433,7 @@ export default function Dashboard({ user, onLogout }) {
         style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}
       >
         
+        {/* HOME TAB */}
         {activeTab === 'home' && (
           <>
             <div 
@@ -1579,7 +1609,7 @@ export default function Dashboard({ user, onLogout }) {
             )}
           </>
         )}
-
+        {/* ANALYSIS TAB */}
         {activeTab === 'analysis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Insights & Analytics</h2>
@@ -1712,6 +1742,7 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         )}
 
+        {/* VAULTS / COLLECTIONS TAB */}
         {activeTab === 'collection' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Collections & Vaults</h2>
@@ -2552,9 +2583,7 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
       )}
-
-     
-      {showAiChat && <AIAssistant onClose={() => setShowAiChat(false)} />}
+      <AIAssistant />
 
     </div>
   );
