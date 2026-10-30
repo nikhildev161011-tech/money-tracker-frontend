@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AIAssistant from './AIAssistant';
 import { 
   Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, 
   Ghost, Code, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, 
@@ -2581,6 +2582,7 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
       )}
+      <AIAssistant />
 
     </div>
   );
