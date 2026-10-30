@@ -1,91 +1,251 @@
-const express = require('express');
-const router = express.Router();
-const { GoogleGenAI } = require('@google/genai');
-const Transaction = require('../models/Transaction');
+import React, { useState, useRef, useEffect } from 'react';
+import { Sparkles, X, Send, Mic, Bot, User, ArrowLeft } from 'lucide-react';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-router.post('/process-ai', async (req, res) => {
-  try {
-    const { message, userId } = req.body;
-    console.log("New message received for Rohix:", message);
-
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Message cannot be empty.' });
-    }
-
-    const prompt = `
-    Analyze this text and extract financial details in strict JSON format only. No markdown, no extra text.
+export default function AIAssistant({ onClose }) {
+  const [messages, setMessages] = useState([
     {
-      "type": "cashIn" or "cashOut",
-      "category": "Salary & Income" or "Entertainment & Leisure" or "Food & Dining" or "Transport & Logistics" or "General" or "Health & Care" or "Other",
-      "amount": number,
-      "description": "short text max 40 chars"
+      sender: 'ai',
+      text: "नमस्ते! मैं रोहिक्स (Rohix) हूँ, आपका पर्सनल फाइनेंस असिस्टेंट। बताइए, आज आपके किस खर्चे या बजट में मदद करूँ?"
     }
-    Text: "${message}"
-    `;
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        temperature: 0.1,
-        maxOutputTokens: 100
-      }
-    });
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    const aiResponseText = response.text || '{}';
-    console.log("Gemini Raw Response:", aiResponseText);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-    let transactionData = {};
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputValue.trim() || loading) return;
+
+    const userMessage = inputValue.trim();
+    setInputValue('');
+    setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
+    setLoading(true);
+
     try {
-      let cleanedJson = aiResponseText.trim();
-      cleanedJson = cleanedJson.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const firstBrace = cleanedJson.indexOf('{');
-      const lastBrace = cleanedJson.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace !== -1) {
-        cleanedJson = cleanedJson.substring(firstBrace, lastBrace + 1);
-      }
-      transactionData = JSON.parse(cleanedJson);
-    } catch (parseError) {
-      console.warn("⚠️ JSON Parse failed, utilizing smart fallback...");
-      const amountMatch = message.match(/\d+/);
-      const isIncome = message.toLowerCase().includes('salary') || message.toLowerCase().includes('received') || message.toLowerCase().includes('got');
+      const currentUserId = localStorage.getItem('user_id') || 'default_user_161011';
       
-      transactionData = {
-        type: isIncome ? 'cashIn' : 'cashOut',
-        category: 'General',
-        amount: amountMatch ? parseInt(amountMatch[0]) : 0,
-        description: message
-      };
+      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com/api/ai/process-ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          userId: currentUserId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setMessages(prev => [...prev, { sender: 'ai', text: result.message }]);
+      } else {
+        setMessages(prev => [...prev, { sender: 'ai', text: 'Sorry, I encountered an error processing your request.' }]);
+      }
+    } catch (error) {
+      console.error('AI Request Error:', error);
+      setMessages(prev => [...prev, { sender: 'ai', text: 'Network error. Please check your backend connection.' }]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const rawType = (transactionData.type || 'cashOut').toLowerCase();
-    const finalType = rawType.includes('in') || rawType.includes('salary') ? 'cashIn' : 'cashOut';
-    const activeUserId = userId || 'default_user_161011';
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: '#000000',
+      color: '#ffffff',
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 1000,
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      <style>{`
+        * { -webkit-tap-highlight-color: transparent !important; user-select: none !important; }
+        input { user-select: text !important; }
+        ::-webkit-scrollbar { display: none; }
+      `}</style>
 
-    const newTransaction = new Transaction({
-      userId: activeUserId,
-      type: finalType,
-      category: transactionData.category || 'General',
-      amount: transactionData.amount || 0,
-      description: (transactionData.description || message).substring(0, 40),
-      date: new Date()
-    });
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '1rem 1.25rem',
+        borderBottom: '1px solid #1f2937',
+        backgroundColor: '#0a0a0a',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            backgroundColor: '#1e3a8a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#3b82f6'
+          }}>
+            <Bot size={20} />
+          </div>
+          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, letterSpacing: '0.02em' }}>Rohix AI असिस्टेंट</h2>
+        </div>
 
-    await newTransaction.save();
-    console.log("⚡ Transaction saved successfully to database!");
+        <button 
+          onClick={onClose}
+          style={{
+            backgroundColor: '#121212',
+            border: '1px solid #262626',
+            borderRadius: '50%',
+            width: '38px',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: '#ffffff'
+          }}
+        >
+          <X size={18} />
+        </button>
+      </div>
 
-    res.status(200).json({
-      success: true,
-      message: `Rohix successfully recorded ₹${transactionData.amount} under ${transactionData.category || 'General'}!`,
-      transaction: newTransaction
-    });
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '1rem 1.25rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        paddingBottom: '6rem'
+      }}>
+        {messages.map((msg, index) => (
+          <div 
+            key={index}
+            style={{
+              display: 'flex',
+              justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+              width: '100%'
+            }}
+          >
+            <div style={{
+              maxWidth: '82%',
+              padding: '0.85rem 1rem',
+              borderRadius: '1rem',
+              backgroundColor: msg.sender === 'user' ? '#2563eb' : '#121212',
+              color: '#ffffff',
+              border: msg.sender === 'ai' ? '1px solid #1f2937' : 'none',
+              fontSize: '0.9rem',
+              lineHeight: '1.5',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            }}>
+              {msg.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ padding: '0.75rem 1rem', borderRadius: '1rem', backgroundColor: '#121212', border: '1px solid #1f2937', color: '#9ca3af', fontSize: '0.85rem' }}>
+              Rohix is typing...
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-  } catch (error) {
-    console.error('AI Processing Error:', error);
-    res.status(500).json({ success: false, error: 'Rohix encountered an issue understanding the request. Please try again.' });
-  }
-});
-export default AIAssistant;
-module.exports = router;
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        width: '100%',
+        backgroundColor: '#0a0a0a',
+        borderTop: '1px solid #1f2937',
+        padding: '0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom)) 1rem',
+        boxSizing: 'border-box',
+        zIndex: 1010
+      }}>
+        <form 
+          onSubmit={handleSendMessage}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}
+        >
+          <button 
+            type="button"
+            style={{
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
+              borderRadius: '50%',
+              width: '42px',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#9ca3af',
+              flexShrink: 0
+            }}
+          >
+            <Mic size={18} />
+          </button>
+
+          <input 
+            type="text"
+            placeholder="खर्च के बारे में पूछें..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            style={{
+              flex: 1,
+              backgroundColor: '#121212',
+              border: '1px solid #262626',
+              borderRadius: '9999px',
+              padding: '0.75rem 1.15rem',
+              color: '#ffffff',
+              fontSize: '0.95rem',
+              outline: 'none'
+            }}
+          />
+
+          <button 
+            type="submit"
+            style={{
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              border: 'none',
+              borderRadius: '50%',
+              width: '42px',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(255,255,255,0.2)'
+            }}
+          >
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
