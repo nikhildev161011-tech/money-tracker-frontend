@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, X, Send, Mic, Bot, User, ArrowLeft } from 'lucide-react';
+import { X, Send, Mic, Bot } from 'lucide-react';
 
 export default function AIAssistant({ onClose }) {
   const [messages, setMessages] = useState([
@@ -69,7 +69,7 @@ export default function AIAssistant({ onClose }) {
       color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 9999,
+      zIndex: 99999,
       boxSizing: 'border-box',
       overflow: 'hidden',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -109,21 +109,26 @@ export default function AIAssistant({ onClose }) {
         </div>
 
         <button 
-          onClick={onClose}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onClose) onClose();
+          }}
           style={{
             backgroundColor: '#121212',
             border: '1px solid #262626',
             borderRadius: '50%',
-            width: '40px',
-            height: '40px',
+            width: '42px',
+            height: '42px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            color: '#ffffff'
+            color: '#ffffff',
+            zIndex: 100000
           }}
         >
-          <X size={20} />
+          <X size={22} />
         </button>
       </div>
 
@@ -131,7 +136,7 @@ export default function AIAssistant({ onClose }) {
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '1rem 1.25rem 7rem 1.25rem',
+        padding: '1rem 1.25rem 6rem 1.25rem',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
@@ -171,26 +176,29 @@ export default function AIAssistant({ onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Fixed Bottom Input Bar */}
+      {/* Fixed Bottom Input Bar - ऊपर उठाया गया ताकि नीचे से न कटे */}
       <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        width: '100%',
+        position: 'fixed',
+        bottom: '1rem',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '92%',
+        maxWidth: '420px',
         backgroundColor: '#0a0a0a',
-        borderTop: '1px solid #1f2937',
-        padding: '0.85rem 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem',
+        border: '1px solid #1f2937',
+        borderRadius: '2rem',
+        padding: '0.5rem 0.75rem',
         boxSizing: 'border-box',
-        zIndex: 1010
+        zIndex: 10100,
+        boxShadow: '0 10px 25px rgba(0,0,0,0.8)'
       }}>
         <form 
           onSubmit={handleSendMessage}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.75rem',
-            maxWidth: '600px',
-            margin: '0 auto'
+            gap: '0.5rem',
+            width: '100%'
           }}
         >
           <button 
@@ -199,17 +207,17 @@ export default function AIAssistant({ onClose }) {
               backgroundColor: '#121212',
               border: '1px solid #262626',
               borderRadius: '50%',
-              width: '42px',
-              height: '42px',
+              width: '38px',
+              height: '38px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               color: '#9ca3af',
-              flexShrink: '0'
+              flexShrink: 0
             }}
           >
-            <Mic size={18} />
+            <Mic size={16} />
           </button>
 
           <input 
@@ -219,13 +227,12 @@ export default function AIAssistant({ onClose }) {
             onChange={(e) => setInputValue(e.target.value)}
             style={{
               flex: 1,
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
-              borderRadius: '9999px',
-              padding: '0.75rem 1.15rem',
+              backgroundColor: 'transparent',
+              border: 'none',
               color: '#ffffff',
-              fontSize: '0.95rem',
-              outline: 'none'
+              fontSize: '0.9rem',
+              outline: 'none',
+              padding: '0.2rem 0.5rem'
             }}
           />
 
@@ -236,17 +243,17 @@ export default function AIAssistant({ onClose }) {
               color: '#000000',
               border: 'none',
               borderRadius: '50%',
-              width: '42px',
-              height: '42px',
+              width: '38px',
+              height: '38px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              flexShrink: '0',
-              boxShadow: '0 4px 12px rgba(255,255,255,0.2)'
+              flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(255,255,255,0.2)'
             }}
           >
-            <Send size={18} />
+            <Send size={16} />
           </button>
         </form>
       </div>
