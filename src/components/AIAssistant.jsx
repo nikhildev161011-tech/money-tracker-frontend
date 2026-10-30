@@ -5,7 +5,7 @@ export default function AIAssistant({ onClose }) {
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: "Hello! I am Rohix, your personal finance assistant. How can I help you with your budget or expenses today?"
+      text: "नमस्ते! मैं रोहिक्स (Rohix) हूँ, आपका अपना पर्सनल फाइनेंस असिस्टेंट। मेरे डेवलपर क्रिकेट के महान खिलाड़ी 'रोहित शर्मा' के बहुत बड़े फैन हैं, इसलिए उन्होंने प्यार से मेरा नाम 'रोहिक्स' रखा है।\n\nफिलहाल, मैं आपके खर्चों को समझना, बजट मैनेज करना और स्मार्ट ऑटोमेशन जैसे फीचर्स के साथ तैयार हो रहा हूँ—यह सिस्टम अभी अंडर-डेवलपमेंट (Under Development) है और बहुत जल्द आपके लिए लाइव होने वाला है!\n\nतब तक आप अपने ट्रांजैक्शन मैन्युअल रूप से जोड़ सकते हैं। आपका दिन शुभ हो, आपका अपना रोहिक्स!"
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -29,33 +29,16 @@ export default function AIAssistant({ onClose }) {
     setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
     setLoading(true);
 
-    try {
-      const currentUserId = localStorage.getItem('user_id') || 'default_user_161011';
-      
-      const response = await fetch('https://money-tracker-backend-0bhm.onrender.com/api/ai/process-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          userId: currentUserId
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setMessages(prev => [...prev, { sender: 'ai', text: result.message }]);
-      } else {
-        setMessages(prev => [...prev, { sender: 'ai', text: 'Sorry, I encountered an error processing your request.' }]);
-      }
-    } catch (error) {
-      console.error('AI Request Error:', error);
-      setMessages(prev => [...prev, { sender: 'ai', text: 'Network error. Please check your backend connection.' }]);
-    } finally {
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev, 
+        { 
+          sender: 'ai', 
+          text: "जी भाई! इस एडवांस्ड स्मार्ट फीचर पर अभी तेजी से काम चल रहा है, और यह बहुत जल्द नए अपडेट के साथ लाइव हो जाएगा। तब तक रोहिक्स आपके साथ है!" 
+        }
+      ]);
       setLoading(false);
-    }
+    }, 600);
   };
 
   return (
@@ -80,13 +63,16 @@ export default function AIAssistant({ onClose }) {
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
+      {/* Header with Liquid Glass effect */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '1rem 1.25rem',
-        borderBottom: '1px solid #1f2937',
-        backgroundColor: '#0a0a0a',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(10, 10, 10, 0.8)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         width: '100%',
         boxSizing: 'border-box',
         flexShrink: 0
@@ -96,11 +82,12 @@ export default function AIAssistant({ onClose }) {
             width: '36px',
             height: '36px',
             borderRadius: '50%',
-            backgroundColor: '#1e3a8a',
+            backgroundColor: '#2563eb',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#3b82f6'
+            color: '#ffffff',
+            boxShadow: '0 0 15px rgba(37, 99, 235, 0.5)'
           }}>
             <Bot size={20} />
           </div>
@@ -114,11 +101,11 @@ export default function AIAssistant({ onClose }) {
             if (onClose) onClose();
           }}
           style={{
-            backgroundColor: '#121212',
-            border: '1px solid #262626',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '50%',
-            width: '42px',
-            height: '42px',
+            width: '40px',
+            height: '40px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -127,10 +114,11 @@ export default function AIAssistant({ onClose }) {
             zIndex: 100000
           }}
         >
-          <X size={22} />
+          <X size={20} />
         </button>
       </div>
 
+      {/* Chat Messages Container */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
@@ -150,15 +138,18 @@ export default function AIAssistant({ onClose }) {
             }}
           >
             <div style={{
-              maxWidth: '82%',
-              padding: '0.85rem 1rem',
-              borderRadius: '1rem',
-              backgroundColor: msg.sender === 'user' ? '#2563eb' : '#121212',
+              maxWidth: '85%',
+              padding: '0.9rem 1.1rem',
+              borderRadius: '1.25rem',
+              backgroundColor: msg.sender === 'user' ? '#2563eb' : 'rgba(255, 255, 255, 0.06)',
+              backdropFilter: msg.sender === 'ai' ? 'blur(12px)' : 'none',
+              WebkitBackdropFilter: msg.sender === 'ai' ? 'blur(12px)' : 'none',
               color: '#ffffff',
-              border: msg.sender === 'ai' ? '1px solid #1f2937' : 'none',
+              border: msg.sender === 'ai' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
               fontSize: '0.9rem',
-              lineHeight: '1.5',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+              lineHeight: '1.6',
+              whiteSpace: 'pre-line',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
             }}>
               {msg.text}
             </div>
@@ -166,28 +157,39 @@ export default function AIAssistant({ onClose }) {
         ))}
         {loading && (
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ padding: '0.75rem 1rem', borderRadius: '1rem', backgroundColor: '#121212', border: '1px solid #1f2937', color: '#9ca3af', fontSize: '0.85rem' }}>
-              Rohix is typing...
+            <div style={{ 
+              padding: '0.75rem 1rem', 
+              borderRadius: '1rem', 
+              backgroundColor: 'rgba(255, 255, 255, 0.06)', 
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)', 
+              color: '#9ca3af', 
+              fontSize: '0.85rem' 
+            }}>
+              रोहिक्स सोच रहा है...
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Floating Liquid Glass Input Bar */}
       <div style={{
         position: 'fixed',
-        bottom: '1rem',
+        bottom: '1.25rem',
         left: '50%',
         transform: 'translateX(-50%)',
         width: '92%',
         maxWidth: '420px',
-        backgroundColor: '#0a0a0a',
-        border: '1px solid #1f2937',
+        backgroundColor: 'rgba(18, 18, 18, 0.75)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
         borderRadius: '2rem',
         padding: '0.5rem 0.75rem',
         boxSizing: 'border-box',
         zIndex: 10100,
-        boxShadow: '0 10px 25px rgba(0,0,0,0.8)'
+        boxShadow: '0 10px 30px rgba(0,0,0,0.8)'
       }}>
         <form 
           onSubmit={handleSendMessage}
@@ -201,8 +203,8 @@ export default function AIAssistant({ onClose }) {
           <button 
             type="button"
             style={{
-              backgroundColor: '#121212',
-              border: '1px solid #262626',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '50%',
               width: '38px',
               height: '38px',
@@ -219,7 +221,7 @@ export default function AIAssistant({ onClose }) {
 
           <input 
             type="text"
-            placeholder="Ask about expenses..."
+            placeholder="रोहिक्स से कुछ पूछें..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             style={{
@@ -247,7 +249,7 @@ export default function AIAssistant({ onClose }) {
               justifyContent: 'center',
               cursor: 'pointer',
               flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(255,255,255,0.2)'
+              boxShadow: '0 2px 10px rgba(255,255,255,0.3)'
             }}
           >
             <Send size={16} />
