@@ -1374,54 +1374,6 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       )}
 
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%', maxWidth: '380px', marginInline: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '50%',
-            backgroundColor: '#000000',
-            overflow: 'hidden',
-            border: `1px solid ${isDark ? '#262626' : '#cbd5e1'}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold',
-            background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 100%)',
-            color: '#ffffff',
-            fontSize: '1rem',
-            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.15)'
-          }}>
-            {user.name.charAt(0)}
-          </div>
-          <div>
-            <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Hello,</p>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: t.text, margin: 0 }}>{user.name}</h1>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
-          <button 
-            onClick={() => setShowAiChat(true)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#3b82f6',
-              boxShadow: isDark ? '0 4px 10px rgba(0,0,0,0.5)' : '0 4px 10px rgba(0,0,0,0.06)'
-            }}
-            title="Rohix AI"
-          >
-            <Sparkles size={19} />
-          </button>
-
           <button 
             onClick={() => setShowSettingsModal(true)}
             style={{
