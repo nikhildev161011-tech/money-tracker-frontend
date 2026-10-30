@@ -69,7 +69,7 @@ export default function AIAssistant({ onClose }) {
       color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 1000,
+      zIndex: 9999,
       boxSizing: 'border-box',
       overflow: 'hidden',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -80,6 +80,7 @@ export default function AIAssistant({ onClose }) {
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
+      {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -88,7 +89,8 @@ export default function AIAssistant({ onClose }) {
         borderBottom: '1px solid #1f2937',
         backgroundColor: '#0a0a0a',
         width: '100%',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
@@ -112,8 +114,8 @@ export default function AIAssistant({ onClose }) {
             backgroundColor: '#121212',
             border: '1px solid #262626',
             borderRadius: '50%',
-            width: '38px',
-            height: '38px',
+            width: '40px',
+            height: '40px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -121,18 +123,19 @@ export default function AIAssistant({ onClose }) {
             color: '#ffffff'
           }}
         >
-          <X size={18} />
+          <X size={20} />
         </button>
       </div>
 
+      {/* Messages List */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '1rem 1.25rem',
+        padding: '1rem 1.25rem 7rem 1.25rem',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
-        paddingBottom: '6rem'
+        boxSizing: 'border-box'
       }}>
         {messages.map((msg, index) => (
           <div 
@@ -168,14 +171,15 @@ export default function AIAssistant({ onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Fixed Bottom Input Bar */}
       <div style={{
-        position: 'fixed',
+        position: 'absolute',
         bottom: 0,
         left: 0,
         width: '100%',
         backgroundColor: '#0a0a0a',
         borderTop: '1px solid #1f2937',
-        padding: '0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom)) 1rem',
+        padding: '0.85rem 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem',
         boxSizing: 'border-box',
         zIndex: 1010
       }}>
@@ -202,7 +206,7 @@ export default function AIAssistant({ onClose }) {
               justifyContent: 'center',
               cursor: 'pointer',
               color: '#9ca3af',
-              flexShrink: 0
+              flexShrink: '0'
             }}
           >
             <Mic size={18} />
@@ -238,7 +242,7 @@ export default function AIAssistant({ onClose }) {
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              flexShrink: 0,
+              flexShrink: '0',
               boxShadow: '0 4px 12px rgba(255,255,255,0.2)'
             }}
           >
