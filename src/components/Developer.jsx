@@ -127,7 +127,7 @@ export default function Developer({ onBack }) {
 
         {/* Portfolio Link Button */}
         <a 
-          href="https://my-portfolio-omega-self-73.vercel.app/" 
+          href="https://nikhilportfolio-ten.vercel.app/" 
           target="_blank" 
           rel="noopener noreferrer"
           style={{
