@@ -443,7 +443,7 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <a 
-            href="https://my-portfolio-omega-self-73.vercel.app/" 
+            href="https://nikhilportfolio-ten.vercel.app/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="animated-portfolio-btn"
