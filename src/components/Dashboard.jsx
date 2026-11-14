@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import AIAssistant from './AIAssistant';
 import { 
-  Home, BarChart2, Folder, Plus, Settings, TrendingUp, TrendingDown, 
+  Home, BarChart2, Folder, Plus, Settings as SettingsIcon, TrendingUp, TrendingDown, 
   Ghost, Code, SlidersHorizontal, ArrowLeft, Globe, ShieldCheck, 
   Laptop, LogOut, Trash2, Check, Wallet, Edit3, Plane, 
   GraduationCap, ShoppingCart, Home as HomeIcon, Dumbbell, Briefcase, 
   X, Receipt, ChevronDown, Sun, Moon, Landmark, Gamepad2, 
-  UtensilsCrossed, CarFront, Sparkles, HeartPulse, Box
+  UtensilsCrossed, CarFront, Sparkles, HeartPulse, Box, Bell, Bot, User, Send, Download, CreditCard
 } from 'lucide-react';
 
 function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 }) {
@@ -53,44 +53,14 @@ function AnimatedCounter({ value, duration = 1100, prefix = "₹", decimals = 2 
   });
 
   return (
-    <span style={{ fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+    <span className="font-sans tabular-nums tracking-tight">
       {isNeg ? `-${prefix}${absFormatted}` : `${prefix}${absFormatted}`}
     </span>
   );
 }
+
 export default function Dashboard({ user, onLogout }) {
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('app_theme') || 'dark';
-  });
-
-  const isDark = theme === 'dark';
-
-  const toggleTheme = () => {
-    const nextTheme = isDark ? 'light' : 'dark';
-    setTheme(nextTheme);
-    localStorage.setItem('app_theme', nextTheme);
-    showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`);
-  };
-
-  const t = {
-    bg: isDark ? '#000000' : '#f8fafc',
-    cardBg: isDark ? '#0a0a0a' : '#ffffff',
-    secondaryCardBg: isDark ? '#121212' : '#f1f5f9',
-    border: isDark ? '#1f2937' : '#e2e8f0',
-    borderSecondary: isDark ? '#262626' : '#cbd5e1',
-    text: isDark ? '#ffffff' : '#0f172a',
-    textSecondary: isDark ? '#9ca3af' : '#64748b',
-    textMuted: isDark ? '#6b7280' : '#94a3b8',
-    pillContainer: isDark ? '#121212' : '#e2e8f0',
-    pillActive: isDark ? '#1f2937' : '#ffffff',
-    pillBorder: isDark ? '#374151' : '#cbd5e1',
-    bottomNavBg: isDark ? '#0a0a0a' : '#ffffff',
-    bottomNavBorder: isDark ? '#1f2937' : '#e2e8f0',
-    bottomNavShadow: isDark ? '0 20px 30px rgba(0,0,0,0.85)' : '0 20px 35px rgba(0,0,0,0.12)',
-    actionBtnBg: isDark ? '#ffffff' : '#0f172a',
-    actionBtnColor: isDark ? '#000000' : '#ffffff',
-    shadow: isDark ? '0 10px 25px -5px rgba(0, 0, 0, 0.5)' : '0 10px 25px -5px rgba(0, 0, 0, 0.08)',
-  };
+  const isDark = true; // Fixed premium dark/black theme
 
   const [activeTab, setActiveTab] = useState('home');
   const [slideDirection, setSlideDirection] = useState('right');
@@ -106,6 +76,7 @@ export default function Dashboard({ user, onLogout }) {
   const [showAddEntryModal, setShowAddEntryModal] = useState(false);
   const [showAddRecordPage, setShowAddRecordPage] = useState(false);
   const [showAiChat, setShowAiChat] = useState(false);
+  const [successAnimType, setSuccessAnimType] = useState(null); // 'cashIn' or 'cashOut'
   
   const [recordType, setRecordType] = useState('cashIn');
   const [recordDesc, setRecordDesc] = useState('');
@@ -126,13 +97,42 @@ export default function Dashboard({ user, onLogout }) {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
 
+  // 3D Tilt state for card
+  const [tiltStyle, setTiltStyle] = useState({});
+
+  const handleCardMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    const dx = (x - xc) / 10;
+    const dy = (yc - y) / 10;
+    setTiltStyle({
+      transform: `perspective(1000px) rotateX(${dy}deg) rotateY(${dx}deg) scale3d(1.02, 1.02, 1.02)`,
+      transition: 'none'
+    });
+  };
+
+  const handleCardMouseLeave = () => {
+    setTiltStyle({
+      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+      transition: 'transform 0.5s ease'
+    });
+  };
+
   const tabList = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'analysis', label: 'Analysis', icon: BarChart2 },
-    { id: 'collection', label: 'Vaults', icon: Folder }
+    { id: 'collection', label: 'Vaults', icon: Folder },
+    { id: 'settings', label: 'Profile', icon: User }
   ];
 
   const handleTabSwitch = (newTabId) => {
+    if (newTabId === 'settings') {
+      setShowSettingsModal(true);
+      return;
+    }
     const tabOrder = ['home', 'analysis', 'collection'];
     const currentIndex = tabOrder.indexOf(activeTab);
     const nextIndex = tabOrder.indexOf(newTabId);
@@ -144,7 +144,6 @@ export default function Dashboard({ user, onLogout }) {
     }
     setActiveTab(newTabId);
   };
-
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
     setTouchStartY(e.touches[0].clientY);
@@ -208,6 +207,7 @@ export default function Dashboard({ user, onLogout }) {
     }
 
     const currentUserId = (user && user.id) ? user.id : 'default_user_161011';
+    const currentType = recordType;
 
     try {
       const response = await fetch('https://money-tracker-backend-0bhm.onrender.com/api/transactions/add', {
@@ -217,7 +217,7 @@ export default function Dashboard({ user, onLogout }) {
         },
         body: JSON.stringify({
           userId: currentUserId,
-          type: recordType,
+          type: currentType,
           description: recordDesc,
           amount: Number(recordAmount),
           category: selectedCategory
@@ -229,7 +229,13 @@ export default function Dashboard({ user, onLogout }) {
         setRecordDesc('');
         setRecordAmount('');
         setShowAddRecordPage(false);
-        showToast("Record added successfully");
+        
+        // Show success animation screen like video reference
+        setSuccessAnimType(currentType);
+        setTimeout(() => {
+          setSuccessAnimType(null);
+        }, 2200);
+
         fetchTransactions(currentUserId);
       } else {
         showToast(result.message || "Failed to add record.");
@@ -327,147 +333,39 @@ export default function Dashboard({ user, onLogout }) {
   const [selectedDay, setSelectedDay] = useState('Sun');
 
   const prebuiltCategories = [
-    { name: 'Salary & Income', type: 'Prebuild', icon: <Landmark size={18} color="#10b981" />, color: 'transparent', borderColor: 'transparent' },
-    { name: 'Entertainment & Leisure', type: 'Prebuild', icon: <Gamepad2 size={18} color="#a855f7" />, color: 'transparent', borderColor: 'transparent' },
-    { name: 'Food & Dining', type: 'Prebuild', icon: <UtensilsCrossed size={18} color="#f59e0b" />, color: 'transparent', borderColor: 'transparent' },
-    { name: 'Transport & Logistics', type: 'Prebuild', icon: <CarFront size={18} color="#3b82f6" />, color: 'transparent', borderColor: 'transparent' },
-    { name: 'General', type: 'Prebuild', icon: <Sparkles size={18} color="#6366f1" />, color: 'transparent', borderColor: 'transparent' },
-    { name: 'Health & Care', type: 'Prebuild', icon: <HeartPulse size={18} color="#f43f5e" />, color: 'transparent', borderColor: 'transparent' }
+    { name: 'Salary & Income', type: 'Prebuild', icon: <Landmark size={18} className="text-emerald-400" /> },
+    { name: 'Entertainment & Leisure', type: 'Prebuild', icon: <Gamepad2 size={18} className="text-purple-400" /> },
+    { name: 'Food & Dining', type: 'Prebuild', icon: <UtensilsCrossed size={18} className="text-amber-400" /> },
+    { name: 'Transport & Logistics', type: 'Prebuild', icon: <CarFront size={18} className="text-blue-400" /> },
+    { name: 'General', type: 'Prebuild', icon: <Sparkles size={18} className="text-indigo-400" /> },
+    { name: 'Health & Care', type: 'Prebuild', icon: <HeartPulse size={18} className="text-rose-400" /> }
   ];
 
   const ownedCategoriesList = ownedCollections.map(item => ({
     name: item.name,
     type: 'Owned',
-    icon: <Box size={18} color={item.color || "#3b82f6"} />,
-    color: 'transparent',
-    borderColor: 'transparent'
+    icon: <Box size={18} style={{ color: item.color || "#3b82f6" }} />
   }));
 
   const categoriesList = [...prebuiltCategories, ...ownedCategoriesList];
   const activeTabIndex = Math.max(0, tabList.findIndex(t => t.id === activeTab));
   const collectionTabs = ['All', 'Prebuild', 'Owned'];
   const activeCollectionIndex = Math.max(0, collectionTabs.indexOf(collectionSubTab));
-  if (showDeveloperPage) {
+
+  // Dynamic Greeting based on current time
+  const currentHour = new Date().getHours();
+  const greetingText = currentHour < 12 ? 'Good Morning' : currentHour < 18 ? 'Good Afternoon' : 'Good Night';
+  const loggedUserName = user?.name || 'Nikhil Gupta';
+  if (successAnimType) {
     return (
-      <div style={{
-        width: '100vw',
-        minHeight: '100vh',
-        backgroundColor: t.bg,
-        color: t.text,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1.5rem 1.25rem 2rem 1.25rem',
-        boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflowX: 'hidden',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}>
-        <style>{`
-          * { -webkit-tap-highlight-color: transparent !important; -webkit-user-select: none !important; user-select: none !important; }
-          @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-          }
-          .animated-portfolio-btn { animation: pulseGlow 2s infinite; }
-          ::-webkit-scrollbar { display: none; }
-        `}</style>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
-          <button 
-            onClick={() => setShowDeveloperPage(false)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: t.text
-            }}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2 style={{ fontSize: '0.95rem', fontWeight: '600', margin: 0, color: t.textSecondary, letterSpacing: '0.05em' }}>Developer Profile</h2>
-          <div style={{ width: '40px' }}></div>
+      <div className="w-screen min-h-screen bg-emerald-600 text-white flex flex-col items-center justify-center p-5 select-none animate-fadeIn">
+        <div className="w-24 h-24 rounded-full bg-white text-emerald-600 flex items-center justify-center mb-6 shadow-2xl animate-bounce">
+          <Check size={56} strokeWidth={3} />
         </div>
-
-        <div style={{
-          width: '100%',
-          maxWidth: '380px',
-          marginInline: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          flexGrow: 1,
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            width: '100%',
-            maxWidth: '220px',
-            height: '130px',
-            margin: '0 0 1rem 0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            filter: 'drop-shadow(0 15px 25px rgba(37, 99, 235, 0.25))'
-          }}>
-            <Laptop size={84} color="#3b82f6" strokeWidth={1.5} />
-          </div>
-
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: '0 0 0.25rem 0', letterSpacing: '-0.025em', color: t.text }}>NIKHIL GUPTA</h1>
-          <p style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: '600', margin: '0 0 1.25rem 0', letterSpacing: '0.05em' }}>
-            BCA STUDENT & SOFTWARE DEVELOPER
-          </p>
-
-          <div style={{ width: '100%', textAlign: 'left', marginBottom: '1.5rem', padding: '0 0.25rem' }}>
-            <h3 style={{ fontSize: '0.9rem', color: t.text, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Code size={16} color="#3b82f6" /> About the Creator
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: t.textSecondary, lineHeight: '1.5', margin: '0 0 1rem 0' }}>
-              Hello! I am NIKHIL GUPTA, a first-year BCA student at IGNOU and a passionate software developer. I love crafting high-performance, mobile-first web apps with clean aesthetics, with an ultimate vision to build impactful technology at Google.
-            </p>
-
-            <h3 style={{ fontSize: '0.9rem', color: t.text, fontWeight: '700', margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShieldCheck size={16} color="#10b981" /> A Note of Gratitude
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: t.textSecondary, lineHeight: '1.5', margin: 0 }}>
-              To everyone downloading and placing your trust in Money Tracker: Thank you! Your belief inspires me to write cleaner code and build better tools. Your financial privacy and seamless experience are always my top priorities.
-            </p>
-          </div>
-
-          <a 
-            href="https://nikhilportfolio-ten.vercel.app/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="animated-portfolio-btn"
-            style={{
-              backgroundColor: '#1e3a8a',
-              color: '#ffffff',
-              fontWeight: '600',
-              padding: '0.75rem 1.25rem',
-              borderRadius: '0.875rem',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.6rem',
-              fontSize: '0.85rem',
-              border: '1px solid #3b82f6',
-              cursor: 'pointer',
-              margin: '0.5rem auto'
-            }}
-          >
-            <Globe size={16} /> Explore Portfolio
-          </a>
-        </div>
-        <div style={{ height: '1rem' }}></div>
+        <h1 className="text-3xl font-extrabold mb-2 tracking-tight">
+          {successAnimType === 'cashIn' ? 'Cash In Successful' : 'Cash Out Successful'}
+        </h1>
+        <p className="text-sm text-emerald-100 font-medium">Your record has been added to vault</p>
       </div>
     );
   }
@@ -476,186 +374,68 @@ export default function Dashboard({ user, onLogout }) {
     const activeSelectedCat = categoriesList.find(c => c.name === selectedCategory) || prebuiltCategories[0];
 
     return (
-      <div style={{
-        width: '100vw',
-        minHeight: '100vh',
-        backgroundColor: t.bg,
-        color: t.text,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1.5rem 1.25rem 2rem 1.25rem',
-        boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflowX: 'hidden',
-        position: 'relative',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}>
-        <style>{`
-          * { -webkit-tap-highlight-color: transparent !important; -webkit-user-select: none !important; user-select: none !important; }
-          input[type=number]::-webkit-inner-spin-button, 
-          input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-          input[type=number] { -moz-appearance: textfield; }
-          ::-webkit-scrollbar { display: none; }
-        `}</style>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
+      <div className="w-screen min-h-screen bg-black text-white flex flex-col justify-between p-5 box-border select-none relative">
+        <div className="flex items-center justify-between w-full max-w-[380px] mx-auto mb-4">
           <button 
             onClick={() => setShowAddRecordPage(false)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: t.text
-            }}
+            className="bg-neutral-900 border border-neutral-800 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer text-white"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Add Record</h2>
-          <div style={{ width: '40px' }}></div>
+          <h2 className="text-base font-bold m-0 tracking-wider">Add Record</h2>
+          <div className="w-10"></div>
         </div>
 
-        <div style={{
-          width: '100%',
-          maxWidth: '380px',
-          marginInline: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.25rem',
-          flexGrow: 1,
-          justifyContent: 'center',
-          position: 'relative'
-        }}>
-          <div style={{
-            display: 'flex',
-            backgroundColor: t.cardBg,
-            border: `1px solid ${t.border}`,
-            borderRadius: '1rem',
-            padding: '0.3rem'
-          }}>
+        <div className="w-full max-w-[380px] mx-auto flex flex-col gap-5 flex-grow justify-center relative">
+          <div className="flex bg-neutral-900 border border-neutral-800 rounded-2xl p-1">
             <button
               onClick={() => setRecordType('cashIn')}
-              style={{
-                flex: 1,
-                backgroundColor: recordType === 'cashIn' ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
-                color: recordType === 'cashIn' ? '#10b981' : t.textSecondary,
-                border: 'none',
-                borderRadius: '0.75rem',
-                padding: '0.75rem',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
+              className={`flex-1 rounded-xl p-3 font-bold text-xs cursor-pointer transition-all ${recordType === 'cashIn' ? 'bg-neutral-800 text-emerald-400' : 'text-neutral-400'}`}
             >
               Cash In (+)
             </button>
             <button
               onClick={() => setRecordType('cashOut')}
-              style={{
-                flex: 1,
-                backgroundColor: recordType === 'cashOut' ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
-                color: recordType === 'cashOut' ? '#ef4444' : t.textSecondary,
-                border: 'none',
-                borderRadius: '0.75rem',
-                padding: '0.75rem',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
+              className={`flex-1 rounded-xl p-3 font-bold text-xs cursor-pointer transition-all ${recordType === 'cashOut' ? 'bg-neutral-800 text-rose-500' : 'text-neutral-400'}`}
             >
               Cash Out (-)
             </button>
           </div>
 
-          <div>
-            <div style={{
-              backgroundColor: t.cardBg,
-              border: `1px solid ${t.border}`,
-              borderRadius: '1rem',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.25rem'
-            }}>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-3.5 flex flex-col gap-1">
+            <input 
+              type="text"
+              placeholder="Description (e.g. Uber Ride)"
+              value={recordDesc}
+              onChange={(e) => setRecordDesc(e.target.value)}
+              maxLength={40}
+              className="bg-transparent border-none text-white text-sm outline-none w-full"
+            />
+            <div className="h-0.5 bg-neutral-800 w-full rounded"></div>
+            <span className="text-[10px] text-neutral-500 text-right">{recordDesc.length}/40</span>
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-3.5 flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-neutral-400 text-base font-bold">₹</span>
               <input 
-                type="text"
-                placeholder="Description"
-                value={recordDesc}
-                onChange={(e) => setRecordDesc(e.target.value)}
-                maxLength={40}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  color: t.text,
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  width: '100%'
-                }}
+                type="number"
+                placeholder="Amount"
+                value={recordAmount}
+                onChange={(e) => setRecordAmount(e.target.value)}
+                className="bg-transparent border-none text-white text-base font-semibold outline-none w-full"
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem' }}>
-                <div style={{ height: '2px', backgroundColor: t.border, width: '100%', borderRadius: '1px' }}></div>
-              </div>
-              <span style={{ fontSize: '0.65rem', color: t.textMuted, textAlign: 'right' }}>{recordDesc.length}/40</span>
             </div>
+            <div className="h-0.5 bg-neutral-800 w-full rounded mt-1"></div>
+            <span className="text-[10px] text-neutral-500 text-right">{recordAmount.length}/8</span>
           </div>
 
-          <div>
-            <div style={{
-              backgroundColor: t.cardBg,
-              border: `1px solid ${t.border}`,
-              borderRadius: '1rem',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.25rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: t.textSecondary, fontSize: '1rem', fontWeight: 'bold' }}>₹</span>
-                <input 
-                  type="number"
-                  placeholder="Amount"
-                  value={recordAmount}
-                  onChange={(e) => setRecordAmount(e.target.value)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    color: t.text,
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    outline: 'none',
-                    width: '100%'
-                  }}
-                />
-              </div>
-              <div style={{ height: '2px', backgroundColor: t.border, width: '100%', borderRadius: '1px', marginTop: '0.2rem' }}></div>
-              <span style={{ fontSize: '0.65rem', color: t.textMuted, textAlign: 'right' }}>{recordAmount.length}/8</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+          <div className="grid grid-cols-4 gap-2">
             {['+₹100', '+₹500', '+₹1000', '+₹5000'].map((amt) => (
               <button
                 key={amt}
                 onClick={() => setRecordAmount(amt.replace('+₹', ''))}
-                style={{
-                  backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: '0.75rem',
-                  padding: '0.6rem 0.2rem',
-                  color: t.textSecondary,
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
+                className="bg-neutral-900 border border-neutral-800 rounded-xl py-2.5 px-1 text-neutral-400 text-xs font-semibold cursor-pointer"
               >
                 {amt}
               </button>
@@ -663,54 +443,23 @@ export default function Dashboard({ user, onLogout }) {
           </div>
 
           <div>
-            <p style={{ fontSize: '0.75rem', color: t.textSecondary, fontWeight: '600', marginBottom: '0.5rem' }}>Category</p>
+            <p className="text-xs text-neutral-400 font-semibold mb-2">Category</p>
             <div 
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              style={{
-                backgroundColor: t.cardBg,
-                border: `1px solid ${t.border}`,
-                borderRadius: '1rem',
-                padding: '0.9rem 1rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                cursor: 'pointer'
-              }}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-3.5 flex justify-between items-center cursor-pointer"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ 
-                  width: '32px', 
-                  height: '32px', 
-                  borderRadius: '0.65rem', 
-                  backgroundColor: activeSelectedCat.color, 
-                  border: `1px solid ${activeSelectedCat.borderColor}`,
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center' 
-                }}>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center">
                   {activeSelectedCat.icon}
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: t.text }}>{selectedCategory}</span>
+                <span className="text-sm font-semibold text-white">{selectedCategory}</span>
               </div>
-              <ChevronDown size={18} color={t.textSecondary} />
+              <ChevronDown size={18} className="text-neutral-400" />
             </div>
 
             {showCategoryDropdown && (
-              <div style={{
-                position: 'absolute',
-                bottom: '120px',
-                left: '0',
-                right: '0',
-                backgroundColor: t.secondaryCardBg,
-                border: `1px solid ${t.borderSecondary}`,
-                borderRadius: '1.25rem',
-                padding: '1rem',
-                boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.9)' : '0 20px 40px rgba(0,0,0,0.15)',
-                zIndex: 50,
-                maxHeight: '280px',
-                overflowY: 'auto'
-              }}>
-                <div style={{ display: 'flex', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1.5rem', padding: '0.25rem', marginBottom: '0.75rem' }}>
+              <div className="absolute bottom-28 left-0 right-0 bg-neutral-900 border border-neutral-800 rounded-2xl p-4 shadow-2xl z-50 max-h-72 overflow-y-auto">
+                <div className="flex bg-black border border-neutral-800 rounded-2xl p-1 mb-3">
                   {['All', 'Prebuild', 'Owned'].map((tab) => (
                     <button
                       key={tab}
@@ -718,24 +467,14 @@ export default function Dashboard({ user, onLogout }) {
                         e.stopPropagation();
                         setCategoryTab(tab);
                       }}
-                      style={{
-                        flex: 1,
-                        backgroundColor: categoryTab === tab ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
-                        color: t.text,
-                        border: 'none',
-                        borderRadius: '1.25rem',
-                        padding: '0.4rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
+                      className={`flex-1 rounded-xl p-1.5 text-xs font-semibold cursor-pointer ${categoryTab === tab ? 'bg-neutral-800 text-white' : 'text-neutral-400'}`}
                     >
                       {categoryTab === tab && '✓ '} {tab}
                     </button>
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <div className="flex flex-col gap-1.5">
                   {categoriesList
                     .filter(cat => categoryTab === 'All' || cat.type === categoryTab)
                     .map((cat) => (
@@ -746,31 +485,15 @@ export default function Dashboard({ user, onLogout }) {
                           setSelectedCategory(cat.name);
                           setShowCategoryDropdown(false);
                         }}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '0.65rem 0.75rem',
-                          borderRadius: '0.75rem',
-                          backgroundColor: selectedCategory === cat.name ? (isDark ? '#1a2e26' : '#dcfce7') : 'transparent',
-                          cursor: 'pointer'
-                        }}
+                        className={`flex justify-between items-center p-2.5 rounded-xl cursor-pointer ${selectedCategory === cat.name ? 'bg-emerald-950/40' : 'hover:bg-neutral-800/50'}`}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                          <div style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '0.5rem',
-                            backgroundColor: cat.color,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-neutral-800 flex items-center justify-center">
                             {cat.icon}
                           </div>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: t.text }}>{cat.name}</span>
+                          <span className="text-xs font-semibold text-white">{cat.name}</span>
                         </div>
-                        {selectedCategory === cat.name && <Check size={16} color="#10b981" />}
+                        {selectedCategory === cat.name && <Check size={16} className="text-emerald-400" />}
                       </div>
                     ))}
                 </div>
@@ -779,38 +502,16 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', width: '100%', maxWidth: '380px', marginInline: 'auto', paddingTop: '1rem' }}>
+        <div className="flex gap-4 w-full max-w-[380px] mx-auto pt-4">
           <button 
             onClick={() => setShowAddRecordPage(false)}
-            style={{
-              flex: 1,
-              backgroundColor: t.cardBg,
-              color: t.text,
-              fontWeight: '600',
-              padding: '0.9rem 1rem',
-              borderRadius: '2.5rem',
-              border: `1px solid ${t.border}`,
-              cursor: 'pointer',
-              fontSize: '0.95rem'
-            }}
+            className="flex-1 bg-neutral-900 text-white font-semibold py-3.5 px-4 rounded-full border border-neutral-800 cursor-pointer text-sm"
           >
             Cancel
           </button>
-
           <button 
             onClick={handleSaveRecord}
-            style={{
-              flex: 1.5,
-              backgroundColor: t.actionBtnBg,
-              color: t.actionBtnColor,
-              fontWeight: '700',
-              padding: '0.9rem 1rem',
-              borderRadius: '2.5rem',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-              boxShadow: isDark ? '0 4px 15px rgba(255,255,255,0.2)' : '0 4px 15px rgba(0,0,0,0.2)'
-            }}
+            className="flex-[1.5] bg-white text-black font-bold py-3.5 px-4 rounded-full border-none cursor-pointer text-sm shadow-lg"
           >
             Add
           </button>
@@ -821,121 +522,56 @@ export default function Dashboard({ user, onLogout }) {
 
   if (showEditCollectionPage) {
     return (
-      <div style={{
-        width: '100vw',
-        minHeight: '100vh',
-        backgroundColor: t.bg,
-        color: t.text,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1.5rem 1.25rem 2rem 1.25rem',
-        boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflowX: 'hidden',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}>
-        <style>{`
-          * { -webkit-tap-highlight-color: transparent !important; -webkit-user-select: none !important; user-select: none !important; }
-          ::-webkit-scrollbar { display: none; }
-        `}</style>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1rem' }}>
+      <div className="w-screen min-h-screen bg-black text-white flex flex-col justify-between p-5 box-border select-none">
+        <div className="flex items-center justify-between w-full max-w-[380px] mx-auto mb-4">
           <button 
             onClick={() => setShowEditCollectionPage(false)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: t.text
-            }}
+            className="bg-neutral-900 border border-neutral-800 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer text-white"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Create Collection</h2>
-          <div style={{ width: '40px' }}></div>
+          <h2 className="text-base font-bold m-0 tracking-wider">Create Collection</h2>
+          <div className="w-10"></div>
         </div>
 
-        <div style={{
-          width: '100%',
-          maxWidth: '380px',
-          marginInline: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.5rem',
-          flexGrow: 1,
-          justifyContent: 'center'
-        }}>
+        <div className="w-full max-w-[380px] mx-auto flex flex-col gap-6 flex-grow justify-center">
           <div>
-            <label style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Collection Name</label>
-            <div style={{
-              backgroundColor: t.cardBg,
-              border: `1px solid ${t.border}`,
-              borderRadius: '1rem',
-              padding: '0.75rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.25rem'
-            }}>
+            <label className="text-xs text-neutral-400 block mb-2 font-semibold">Collection Name</label>
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-3.5 flex flex-col gap-1">
               <input 
                 type="text"
                 placeholder="Enter Collection Name"
                 value={editingCollectionName}
                 onChange={(e) => setEditingCollectionName(e.target.value)}
                 maxLength={25}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  color: t.text,
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  outline: 'none',
-                  width: '100%'
-                }}
+                className="bg-transparent border-none text-white text-base font-semibold outline-none w-full"
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                <div style={{ height: '2px', backgroundColor: '#3b82f6', width: '60%', borderRadius: '1px' }}></div>
-                <span style={{ fontSize: '0.7rem', color: t.textMuted }}>{editingCollectionName.length}/25</span>
+              <div className="flex justify-between items-center mt-1">
+                <div className="h-0.5 bg-blue-500 w-3/5 rounded"></div>
+                <span className="text-[10px] text-neutral-500">{editingCollectionName.length}/25</span>
               </div>
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Theme Color</label>
-            <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <label className="text-xs text-neutral-400 block mb-3 font-semibold">Select Theme Color</label>
+            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
               {['#3b82f6', '#0d9488', '#10b981', '#f59e0b', '#ec4899', '#a855f7', '#facc15', '#06b6d4', '#6366f1'].map((color) => (
                 <div 
                   key={color}
                   onClick={() => setSelectedColor(color)}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: color,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: selectedColor === color ? '2px solid #ffffff' : '2px solid transparent',
-                    boxShadow: selectedColor === color ? '0 0 10px rgba(0,0,0,0.4)' : 'none',
-                    flexShrink: 0
-                  }}
+                  style={{ backgroundColor: color }}
+                  className={`w-8 h-8 rounded-full cursor-pointer flex items-center justify-center border-2 shrink-0 ${selectedColor === color ? 'border-white shadow-lg' : 'border-transparent'}`}
                 >
-                  {selectedColor === color && <div style={{ width: '8px', height: '8px', backgroundColor: '#ffffff', borderRadius: '50%' }}></div>}
+                  {selectedColor === color && <div className="w-2 h-2 bg-white rounded-full"></div>}
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>Select Collection Icon</label>
-            <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <label className="text-xs text-neutral-400 block mb-3 font-semibold">Select Collection Icon</label>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {[
                 { id: 'plane', icon: <Plane size={20} /> },
                 { id: 'edu', icon: <GraduationCap size={20} /> },
@@ -949,19 +585,7 @@ export default function Dashboard({ user, onLogout }) {
                 <div 
                   key={item.id}
                   onClick={() => setSelectedIcon(item.id)}
-                  style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '1rem',
-                    backgroundColor: selectedIcon === item.id ? (isDark ? '#1e3a8a' : '#dbeafe') : t.cardBg,
-                    border: selectedIcon === item.id ? '1px solid #3b82f6' : `1px solid ${t.border}`,
-                    color: selectedIcon === item.id ? '#3b82f6' : t.textSecondary,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer shrink-0 border ${selectedIcon === item.id ? 'bg-blue-950/60 border-blue-500 text-blue-500' : 'bg-neutral-900 border-neutral-800 text-neutral-400'}`}
                 >
                   {item.icon}
                 </div>
@@ -970,24 +594,13 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', width: '100%', maxWidth: '380px', marginInline: 'auto', paddingTop: '1rem' }}>
+        <div className="flex gap-4 w-full max-w-[380px] mx-auto pt-4">
           <button 
             onClick={() => setShowEditCollectionPage(false)}
-            style={{
-              flex: 1,
-              backgroundColor: t.cardBg,
-              color: t.text,
-              fontWeight: '600',
-              padding: '0.9rem 1rem',
-              borderRadius: '2.5rem',
-              border: `1px solid ${t.border}`,
-              cursor: 'pointer',
-              fontSize: '0.95rem'
-            }}
+            className="flex-1 bg-neutral-900 text-white font-semibold py-3.5 px-4 rounded-full border border-neutral-800 cursor-pointer text-sm"
           >
             Cancel
           </button>
-
           <button 
             onClick={() => {
               if (editingCollectionName.trim() !== '') {
@@ -996,18 +609,7 @@ export default function Dashboard({ user, onLogout }) {
               }
               setShowEditCollectionPage(false);
             }}
-            style={{
-              flex: 1.5,
-              backgroundColor: t.actionBtnBg,
-              color: t.actionBtnColor,
-              fontWeight: '700',
-              padding: '0.9rem 1rem',
-              borderRadius: '2.5rem',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-              boxShadow: isDark ? '0 4px 15px rgba(255,255,255,0.2)' : '0 4px 15px rgba(0,0,0,0.2)'
-            }}
+            className="flex-[1.5] bg-white text-black font-bold py-3.5 px-4 rounded-full border-none cursor-pointer text-sm shadow-lg"
           >
             Create
           </button>
@@ -1015,96 +617,50 @@ export default function Dashboard({ user, onLogout }) {
       </div>
     );
   }
+
   if (showSummaryPage) {
     return (
-      <div style={{
-        width: '100vw',
-        minHeight: '100vh',
-        backgroundColor: t.bg,
-        color: t.text,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1.5rem 1.25rem 2rem 1.25rem',
-        boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflowX: 'hidden',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}>
-        <style>{`* { -webkit-tap-highlight-color: transparent !important; -webkit-user-select: none !important; user-select: none !important; }`}</style>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1.5rem' }}>
+      <div className="w-screen min-h-screen bg-black text-white flex flex-col justify-between p-5 box-border select-none">
+        <div className="flex items-center justify-between w-full max-w-[380px] mx-auto mb-6">
           <button 
             onClick={() => setShowSummaryPage(false)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: t.text
-            }}
+            className="bg-neutral-900 border border-neutral-800 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer text-white"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Summary</h2>
-          <div style={{ width: '40px' }}></div>
+          <h2 className="text-base font-bold m-0 tracking-wider">Summary</h2>
+          <div className="w-10"></div>
         </div>
 
-        <div style={{
-          width: '100%',
-          maxWidth: '380px',
-          marginInline: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          flexGrow: 1,
-          justifyContent: 'center',
-          gap: '2rem'
-        }}>
-          <div style={{ textAlign: 'center', width: '100%' }}>
-            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.5rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Amount</p>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: t.text, margin: 0 }}>
+        <div className="w-full max-w-[380px] mx-auto flex flex-col items-center flex-grow justify-center gap-8">
+          <div className="text-center w-full">
+            <p className="text-neutral-400 text-xs font-semibold mb-2 uppercase tracking-wider">Net Amount</p>
+            <h1 className="text-4xl font-extrabold m-0">
               <AnimatedCounter value={netBalance} />
             </h1>
           </div>
 
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: t.cardBg, borderRadius: '1rem', border: `1px solid ${t.border}` }}>
-              <span style={{ color: t.textSecondary, fontSize: '0.9rem', fontWeight: '600' }}>Total Cash In</span>
-              <span style={{ color: '#10b981', fontSize: '1rem', fontWeight: '700' }}>
+          <div className="w-full flex flex-col gap-4">
+            <div className="flex justify-between items-center p-4 bg-neutral-900 rounded-2xl border border-neutral-800">
+              <span className="text-neutral-400 text-sm font-semibold">Total Cash In</span>
+              <span className="text-emerald-400 text-base font-bold">
                 +<AnimatedCounter value={totalCashIn} />
               </span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', backgroundColor: t.cardBg, borderRadius: '1rem', border: `1px solid ${t.border}` }}>
-              <span style={{ color: t.textSecondary, fontSize: '0.9rem', fontWeight: '600' }}>Total Cash Out</span>
-              <span style={{ color: '#ef4444', fontSize: '1rem', fontWeight: '700' }}>
+            <div className="flex justify-between items-center p-4 bg-neutral-900 rounded-2xl border border-neutral-800">
+              <span className="text-neutral-400 text-sm font-semibold">Total Cash Out</span>
+              <span className="text-rose-500 text-base font-bold">
                 -<AnimatedCounter value={totalCashOut} />
               </span>
             </div>
           </div>
         </div>
 
-        <div style={{ width: '100%', maxWidth: '380px', marginInline: 'auto' }}>
+        <div className="w-full max-w-[380px] mx-auto">
           <button 
             onClick={() => setShowSummaryPage(false)}
-            style={{
-              width: '100%',
-              backgroundColor: t.cardBg,
-              color: t.text,
-              fontWeight: '600',
-              padding: '0.9rem 1rem',
-              borderRadius: '2.5rem',
-              border: `1px solid ${t.border}`,
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-              boxShadow: t.shadow
-            }}
+            className="w-full bg-neutral-900 text-white font-semibold py-3.5 px-4 rounded-full border border-neutral-800 cursor-pointer text-sm shadow-md"
           >
             Got it
           </button>
@@ -1115,156 +671,69 @@ export default function Dashboard({ user, onLogout }) {
 
   if (showFilterPage) {
     return (
-      <div style={{
-        width: '100vw',
-        minHeight: '100vh',
-        backgroundColor: t.bg,
-        color: t.text,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1.5rem 1.25rem 2rem 1.25rem',
-        boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflowX: 'hidden',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}>
-        <style>{`* { -webkit-tap-highlight-color: transparent !important; -webkit-user-select: none !important; user-select: none !important; }`}</style>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginInline: 'auto', marginBottom: '1.5rem' }}>
+      <div className="w-screen min-h-screen bg-black text-white flex flex-col justify-between p-5 box-border select-none">
+        <div className="flex items-center justify-between w-full max-w-[380px] mx-auto mb-6">
           <button 
             onClick={() => setShowFilterPage(false)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: t.text
-            }}
+            className="bg-neutral-900 border border-neutral-800 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer text-white"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, color: t.text, letterSpacing: '0.05em' }}>Filter Transactions</h2>
-          <div style={{ width: '40px' }}></div>
+          <h2 className="text-base font-bold m-0 tracking-wider">Filter Transactions</h2>
+          <div className="w-10"></div>
         </div>
 
-        <div style={{
-          width: '100%',
-          maxWidth: '380px',
-          marginInline: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          flexGrow: 1,
-          gap: '1.5rem',
-          paddingTop: '0.5rem'
-        }}>
+        <div className="w-full max-w-[380px] mx-auto flex flex-col flex-grow gap-6 pt-2">
           <div>
-            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Sort By</p>
-            <div style={{ display: 'flex', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
+            <p className="text-neutral-400 text-xs font-semibold mb-3">Sort By</p>
+            <div className="flex bg-neutral-900 border border-neutral-800 rounded-2xl p-1">
               {['Newest', 'Oldest'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setSortBy(item)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: sortBy === item ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
-                    color: t.text,
-                    border: 'none',
-                    borderRadius: '0.75rem',
-                    padding: '0.75rem',
-                    fontWeight: '600',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.4rem'
-                  }}
+                  className={`flex-1 rounded-xl p-3 font-semibold text-xs cursor-pointer flex items-center justify-center gap-1.5 ${sortBy === item ? 'bg-neutral-800 text-white' : 'text-neutral-400'}`}
                 >
-                  {sortBy === item && <Check size={14} color="#3b82f6" />} {item}
+                  {sortBy === item && <Check size={14} className="text-blue-500" />} {item}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Record Type</p>
-            <div style={{ display: 'flex', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
+            <p className="text-neutral-400 text-xs font-semibold mb-3">Record Type</p>
+            <div className="flex bg-neutral-900 border border-neutral-800 rounded-2xl p-1">
               {['All', 'Cash In', 'Cash Out'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setFilterRecordType(item)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: filterRecordType === item ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
-                    color: t.text,
-                    border: 'none',
-                    borderRadius: '0.75rem',
-                    padding: '0.75rem',
-                    fontWeight: '600',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem'
-                  }}
+                  className={`flex-1 rounded-xl p-3 font-semibold text-xs cursor-pointer flex items-center justify-center gap-1 ${filterRecordType === item ? 'bg-neutral-800 text-white' : 'text-neutral-400'}`}
                 >
-                  {filterRecordType === item && <Check size={14} color="#3b82f6" />} {item}
+                  {filterRecordType === item && <Check size={14} className="text-blue-500" />} {item}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <p style={{ color: t.textSecondary, fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem' }}>Time</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '1rem', padding: '0.3rem' }}>
+            <p className="text-neutral-400 text-xs font-semibold mb-3">Time</p>
+            <div className="grid grid-cols-2 gap-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-1">
               {['All', 'Daily', 'Weekly', 'Monthly'].map((item) => (
                 <button
                   key={item}
                   onClick={() => setTimeFilter(item)}
-                  style={{
-                    backgroundColor: timeFilter === item ? (isDark ? '#1f2937' : '#e2e8f0') : 'transparent',
-                    color: t.text,
-                    border: 'none',
-                    borderRadius: '0.75rem',
-                    padding: '0.75rem',
-                    fontWeight: '600',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem'
-                  }}
+                  className={`rounded-xl p-3 font-semibold text-xs cursor-pointer flex items-center justify-center gap-1 ${timeFilter === item ? 'bg-neutral-800 text-white' : 'text-neutral-400'}`}
                 >
-                  {timeFilter === item && <Check size={14} color="#3b82f6" />} {item}
+                  {timeFilter === item && <Check size={14} className="text-blue-500" />} {item}
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        <div style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', paddingTop: '1rem' }}>
+        <div className="w-full max-w-[380px] mx-auto pt-4">
           <button 
             onClick={() => setShowFilterPage(false)}
-            style={{
-              width: '100%',
-              backgroundColor: t.cardBg,
-              color: t.text,
-              fontWeight: '600',
-              padding: '0.9rem 1rem',
-              borderRadius: '2.5rem',
-              border: `1px solid ${t.border}`,
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-              boxShadow: t.shadow
-            }}
+            className="w-full bg-neutral-900 text-white font-semibold py-3.5 px-4 rounded-full border border-neutral-800 cursor-pointer text-sm shadow-md"
           >
             Apply Filters
           </button>
@@ -1273,231 +742,122 @@ export default function Dashboard({ user, onLogout }) {
     );
   }
   return (
-    <div style={{
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: t.bg,
-      color: t.text,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      padding: '1.25rem 1.25rem 6.5rem 1.25rem',
-      boxSizing: 'border-box',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      overflowX: 'hidden',
-      position: 'relative',
-      WebkitUserSelect: 'none',
-      userSelect: 'none'
-    }}>
-      <style>{`
-        * {
-          -webkit-tap-highlight-color: transparent !important;
-          -webkit-touch-callout: none;
-          -webkit-user-select: none !important;
-          user-select: none !important;
-        }
-        button, a, input {
-          -webkit-tap-highlight-color: transparent !important;
-          outline: none !important;
-          -webkit-user-select: none !important;
-          user-select: none !important;
-        }
-        button:focus, button:focus-visible, button:active {
-          outline: none !important;
-          box-shadow: none;
-        }
-
-        @keyframes slideFromRight {
-          0% { opacity: 0; transform: translateX(24px) scale(0.98); }
-          100% { opacity: 1; transform: translateX(0) scale(1); }
-        }
-        @keyframes slideFromLeft {
-          0% { opacity: 0; transform: translateX(-24px) scale(0.98); }
-          100% { opacity: 1; transform: translateX(0) scale(1); }
-        }
-        .tab-slide-right {
-          animation: slideFromRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .tab-slide-left {
-          animation: slideFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .nav-tab-btn:active {
-          transform: scale(0.94);
-        }
-        .plus-action-btn:active {
-          transform: scale(0.9);
-        }
-
-        @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-        .bottom-sheet-anim {
-          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes toastFade {
-          0% { opacity: 0; transform: translateY(20px) translateX(-50%); }
-          15% { opacity: 1; transform: translateY(0) translateX(-50%); }
-          85% { opacity: 1; transform: translateY(0) translateX(-50%); }
-          100% { opacity: 0; transform: translateY(20px) translateX(-50%); }
-        }
-        .toast-popup {
-          animation: toastFade 3s ease-in-out forwards;
-        }
-      `}</style>
-
+    <div className="w-screen min-h-screen bg-black text-white flex flex-col justify-between p-5 pb-28 box-border select-none relative">
+      
       {toastMessage && (
-        <div className="toast-popup" style={{
-          position: 'fixed',
-          bottom: '5.5rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: t.secondaryCardBg,
-          color: t.text,
-          border: `1px solid ${t.borderSecondary}`,
-          padding: '0.75rem 1.25rem',
-          borderRadius: '9999px',
-          fontSize: '0.85rem',
-          fontWeight: '600',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          boxShadow: isDark ? '0 10px 25px rgba(0,0,0,0.8)' : '0 10px 25px rgba(0,0,0,0.15)',
-          zIndex: 1000,
-          whiteSpace: 'nowrap'
-        }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3b82f6' }}></div>
+        <div className="fixed bottom-22 left-1/2 -translate-x-1/2 bg-neutral-900 text-white border border-neutral-800 py-3 px-5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-2xl z-50 whitespace-nowrap animate-bounce">
+          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
           {toastMessage}
         </div>
       )}
 
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%', maxWidth: '380px', marginInline: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '50%',
-            backgroundColor: '#000000',
-            overflow: 'hidden',
-            border: `1px solid ${isDark ? '#262626' : '#cbd5e1'}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold',
-            background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 100%)',
-            color: '#ffffff',
-            fontSize: '1rem',
-            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.15)'
-          }}>
-            {user.name.charAt(0)}
-          </div>
-          <div>
-            <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Hello,</p>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: t.text, margin: 0 }}>{user.name}</h1>
-          </div>
+      {/* Header Bar with Greeting & Notification Icon */}
+      <div className="flex justify-between items-center mb-6 w-full max-w-[380px] mx-auto">
+        <div>
+          <p className="text-xs text-neutral-400 m-0">{greetingText},</p>
+          <h1 className="text-[1.1rem] font-bold m-0 text-white">{loggedUserName}</h1>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+        <div className="flex gap-2.5 items-center">
           <button 
-            onClick={() => setShowSettingsModal(true)}
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              border: `1px solid ${t.borderSecondary}`,
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: t.text,
-              boxShadow: isDark ? '0 4px 10px rgba(0,0,0,0.5)' : '0 4px 10px rgba(0,0,0,0.06)'
-            }}
-            title="Settings"
+            onClick={() => showToast("Notifications")}
+            className="bg-neutral-900 border border-neutral-800 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer text-white shadow-md active:scale-95 transition-transform relative"
+            title="Notifications"
           >
-            <Settings size={19} />
+            <Bell size={18} />
           </button>
         </div>
       </div>
 
       <div 
         key={activeTab} 
-        className={slideDirection === 'right' ? 'tab-slide-right' : 'tab-slide-left'}
+        className={`w-full max-w-[380px] mx-auto flex-grow flex flex-col ${slideDirection === 'right' ? 'animate-fadeIn' : 'animate-fadeIn'}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        style={{ width: '100%', maxWidth: '380px', marginInline: 'auto', flexGrow: '1', display: 'flex', flexDirection: 'column' }}
       >
         
         {activeTab === 'home' && (
           <>
+            {/* My Wallet Section title */}
+            <h2 className="text-sm font-bold text-neutral-400 mb-3 tracking-wide">My Wallet</h2>
+
+            {/* 3D Tilt Debit Card Style Overview */}
             <div 
+              onMouseMove={handleCardMouseMove}
+              onMouseLeave={handleCardMouseLeave}
               onClick={() => setShowSummaryPage(true)}
-              style={{
-                backgroundColor: t.cardBg,
-                border: `1px solid ${t.border}`,
-                padding: '1.25rem',
-                borderRadius: '1.25rem',
-                marginBottom: '1.5rem',
-                boxShadow: t.shadow,
-                cursor: 'pointer',
-                transform: activeTab === 'home' ? 'scale(1)' : 'scale(0.98)',
-                transition: 'transform 0.3s ease'
-              }}
+              style={tiltStyle}
+              className="bg-gradient-to-br from-neutral-900 via-neutral-950 to-black border border-neutral-800 p-6 rounded-3xl mb-6 shadow-2xl cursor-pointer relative overflow-hidden transition-all duration-200"
             >
-              <p style={{ color: t.textSecondary, fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: t.text, textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-xs text-neutral-400 font-medium tracking-wider m-0">Finsight Vault</p>
+                </div>
+                <CreditCard size={22} className="text-white/80" />
+              </div>
+
+              <p className="text-xs text-neutral-400 font-semibold m-0 uppercase tracking-wider">Overview</p>
+              <p className="text-3xl font-extrabold text-white my-1.5 tracking-tight">
                 <AnimatedCounter value={netBalance} />
               </p>
               
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingUp size={14} color="#10b981" /> Cash In
-                  </span>
-                  <p style={{ fontWeight: 'bold', color: '#10b981', fontSize: '0.9rem', margin: 0 }}>
-                    <AnimatedCounter value={totalCashIn} />
-                  </p>
+              <div className="flex justify-between items-end mt-6 pt-4 border-t border-neutral-800/80">
+                <div>
+                  <p className="text-[10px] text-emerald-400 uppercase m-0 font-semibold">Cash In</p>
+                  <p className="text-xs text-emerald-300 font-bold m-0">+₹{totalCashIn}</p>
                 </div>
-                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingDown size={14} color="#ef4444" /> Cash Out
-                  </span>
-                  <p style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.9rem', margin: 0 }}>
-                    <AnimatedCounter value={totalCashOut} />
-                  </p>
+                <div className="text-right">
+                  <p className="text-[10px] text-rose-400 uppercase m-0 font-semibold">Cash Out</p>
+                  <p className="text-xs text-rose-300 font-bold m-0">-₹{totalCashOut}</p>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: t.text }}>Recent Activity</h3>
+            {/* Spending and Collection Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button 
+                onClick={() => setShowAddRecordPage(true)}
+                className="bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 p-4 rounded-2xl flex items-center gap-3 cursor-pointer transition-transform active:scale-95 shadow-md text-white"
+              >
+                <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white border border-neutral-800">
+                  <Send size={18} />
+                </div>
+                <div className="text-left">
+                  <span className="text-xs font-semibold block text-white">Spending</span>
+                  <span className="text-[10px] text-neutral-400 block">Record expense</span>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setShowEditCollectionPage(true)}
+                className="bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 p-4 rounded-2xl flex items-center gap-3 cursor-pointer transition-transform active:scale-95 shadow-md text-white"
+              >
+                <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white border border-neutral-800">
+                  <Folder size={18} />
+                </div>
+                <div className="text-left">
+                  <span className="text-xs font-semibold block text-white">Collection</span>
+                  <span className="text-[10px] text-neutral-400 block">Group vault</span>
+                </div>
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-bold m-0 text-white">Transaction History</h3>
               <button 
                 onClick={() => setShowFilterPage(true)}
-                style={{
-                  backgroundColor: t.secondaryCardBg,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: '50%',
-                  width: '36px',
-                  height: '36px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: t.textSecondary
-                }}
-                title="Filter Activity"
+                className="bg-transparent border-none text-xs text-neutral-400 hover:text-white cursor-pointer font-semibold"
               >
-                <SlidersHorizontal size={16} />
+                View All
               </button>
             </div>
 
             {loadingTransactions ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: t.textSecondary }}>Loading database records...</div>
+              <div className="text-center py-8 text-neutral-500 text-sm">Loading database records...</div>
             ) : transactions.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="flex flex-col gap-3">
                 {transactions
                   .filter(txn => {
                     if (filterRecordType === 'Cash In') return txn.type === 'cashIn';
@@ -1533,52 +893,27 @@ export default function Dashboard({ user, onLogout }) {
                     const matchedCategory = categoriesList.find(c => c.name === txn.category) || prebuiltCategories[0];
 
                     return (
-                      <div key={txn._id} style={{
-                        backgroundColor: t.cardBg,
-                        border: `1px solid ${t.border}`,
-                        borderRadius: '1rem',
-                        padding: '1rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.05)'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{
-                            width: '38px',
-                            height: '38px',
-                            borderRadius: '0.75rem',
-                            backgroundColor: matchedCategory.color,
-                            border: `1px solid ${matchedCategory.borderColor}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
+                      <div key={txn._id} className="bg-neutral-900/60 border border-neutral-800/80 rounded-2xl p-3.5 flex justify-between items-center shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-black border border-neutral-800 flex items-center justify-center text-neutral-300">
                             {matchedCategory.icon}
                           </div>
                           <div>
-                            <p style={{ fontWeight: '600', fontSize: '0.95rem', margin: '0 0 0.2rem 0', color: t.text }}>{txn.description}</p>
-                            <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: 0 }}>{txn.category} • {new Date(txn.date).toLocaleDateString()}</p>
+                            <p className="font-semibold text-sm m-0 mb-0.5 text-white">{txn.description}</p>
+                            <p className="text-[11px] text-neutral-400 m-0">{txn.category} • {new Date(txn.date).toLocaleDateString()}</p>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: txn.type === 'cashIn' ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
-                            <span>{txn.type === 'cashIn' ? '+' : '-'}</span>
-                            <span>₹{txn.amount}</span>
+                        <div className="flex items-center gap-3">
+                          <span className={`font-bold text-sm ${txn.type === 'cashIn' ? 'text-emerald-400' : 'text-white'}`}>
+                            {txn.type === 'cashIn' ? '+' : '-'}₹{txn.amount}
                           </span>
                           <button 
                             onClick={() => handleDeleteTransaction(txn._id)}
-                            style={{
-                              backgroundColor: 'transparent',
-                              border: 'none',
-                              color: t.textMuted,
-                              cursor: 'pointer',
-                              padding: '4px'
-                            }}
+                            className="bg-transparent border-none text-neutral-500 hover:text-rose-400 cursor-pointer p-1"
                             title="Delete Record"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </div>
@@ -1586,105 +921,70 @@ export default function Dashboard({ user, onLogout }) {
                   })}
               </div>
             ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '3rem 1rem',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexGrow: 1
-              }}>
-                <div style={{ marginBottom: '1rem', color: t.text }}>
-                  <Ghost size={64} strokeWidth={1.5} />
-                </div>
-                <p style={{ color: t.text, fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Activity Yet</p>
-                <p style={{ fontSize: '0.75rem', color: t.textMuted, maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
-                  Change filters or tap the "+" button below to add a new entry.
+              <div className="text-center py-12 flex flex-col items-center justify-center flex-grow">
+                <Ghost size={64} strokeWidth={1.5} className="text-neutral-600 mb-3" />
+                <p className="text-white font-semibold text-base m-0 mb-1">No Activity Yet</p>
+                <p className="text-xs text-neutral-500 max-w-[240px] leading-relaxed m-0">
+                  Change filters or tap buttons above to add a new entry.
                 </p>
               </div>
             )}
           </>
         )}
-
         {activeTab === 'analysis' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Insights & Analytics</h2>
+          <div className="flex flex-col gap-5">
+            <h2 className="text-2xl font-extrabold m-0 tracking-tight text-white">Insights & Analytics</h2>
 
             <div 
               onClick={() => setShowSummaryPage(true)}
-              style={{
-                backgroundColor: t.cardBg,
-                border: `1px solid ${t.border}`,
-                padding: '1.25rem',
-                borderRadius: '1.25rem',
-                boxShadow: t.shadow,
-                cursor: 'pointer'
-              }}
+              className="bg-neutral-900 border border-neutral-800 p-5 rounded-3xl shadow-xl cursor-pointer"
             >
-              <p style={{ color: t.textSecondary, fontSize: '0.75rem', fontWeight: '600', textAlign: 'center', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overview</p>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: t.text, textAlign: 'center', margin: '0.5rem 0 1rem 0' }}>
+              <p className="text-neutral-400 text-xs font-semibold text-center m-0 uppercase tracking-wider">Overview</p>
+              <p className="text-4xl font-extrabold text-center my-2 text-white">
                 <AnimatedCounter value={netBalance} />
               </p>
               
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingUp size={14} color="#10b981" /> Cash In
+              <div className="flex gap-3 mt-4">
+                <div className="bg-black/40 p-3 rounded-2xl flex-1 border border-neutral-800">
+                  <span className="text-xs text-neutral-400 flex items-center gap-1.5 mb-1">
+                    <TrendingUp size={14} className="text-emerald-400" /> Cash In
                   </span>
-                  <p style={{ fontWeight: 'bold', color: '#10b981', fontSize: '0.9rem', margin: 0 }}>
+                  <p className="font-bold text-emerald-400 text-sm m-0">
                     <AnimatedCounter value={totalCashIn} />
                   </p>
                 </div>
-                <div style={{ backgroundColor: t.secondaryCardBg, padding: '0.75rem', borderRadius: '0.875rem', flex: 1, border: `1px solid ${t.border}` }}>
-                  <span style={{ fontSize: '0.75rem', color: t.textSecondary, display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.25rem' }}>
-                    <TrendingDown size={14} color="#ef4444" /> Cash Out
+                <div className="bg-black/40 p-3 rounded-2xl flex-1 border border-neutral-800">
+                  <span className="text-xs text-neutral-400 flex items-center gap-1.5 mb-1">
+                    <TrendingDown size={14} className="text-rose-500" /> Cash Out
                   </span>
-                  <p style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.9rem', margin: 0 }}>
+                  <p className="font-bold text-rose-500 text-sm m-0">
                     <AnimatedCounter value={totalCashOut} />
                   </p>
                 </div>
               </div>
             </div>
 
-            <div style={{
-              backgroundColor: t.cardBg,
-              border: `1px solid ${t.border}`,
-              padding: '1.25rem',
-              borderRadius: '1.25rem',
-              boxShadow: t.shadow
-            }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: t.text }}>Weekly Spending Activity</h3>
-              <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 1.5rem 0' }}>Tap any bar to see details</p>
+            <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-3xl shadow-xl">
+              <h3 className="text-base font-bold m-0 mb-1 text-white">Weekly Spending Activity</h3>
+              <p className="text-xs text-neutral-400 m-0 mb-6">Tap any bar to see details</p>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '110px', paddingBottom: '0.5rem', borderBottom: `1px solid ${t.border}` }}>
+              <div className="flex justify-between items-end h-28 pb-2 border-b border-neutral-800">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                   const dayAmt = weeklySpendingMap[day] || 0;
                   const maxAmt = Math.max(...Object.values(weeklySpendingMap), 1000);
                   const barHeight = dayAmt > 0 ? Math.min(Math.max((dayAmt / maxAmt) * 90, 15), 90) : 3;
                   const isSelected = selectedDay === day;
-                  const barColor = dayAmt > 0 ? '#ef4444' : (isDark ? '#1f2937' : '#e2e8f0');
                   return (
                     <div 
                       key={day}
                       onClick={() => setSelectedDay(day)}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        cursor: 'pointer',
-                        flex: 1
-                      }}
+                      className="flex flex-col items-center gap-2 cursor-pointer flex-1"
                     >
-                      <div style={{
-                        width: '16px',
-                        height: `${barHeight}px`,
-                        backgroundColor: barColor,
-                        borderRadius: '4px',
-                        transition: 'height 0.2s ease'
-                      }}></div>
-                      <span style={{ fontSize: '0.7rem', color: isSelected ? t.text : t.textSecondary, fontWeight: isSelected ? 'bold' : 'normal' }}>
+                      <div 
+                        style={{ height: `${barHeight}px` }}
+                        className={`w-4 rounded-md transition-all ${dayAmt > 0 ? 'bg-rose-500' : 'bg-neutral-800'}`}
+                      ></div>
+                      <span className={`text-[11px] ${isSelected ? 'text-white font-bold' : 'text-neutral-500'}`}>
                         {day}
                       </span>
                     </div>
@@ -1692,16 +992,16 @@ export default function Dashboard({ user, onLogout }) {
                 })}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.5rem' }}>
+              <div className="flex justify-between mt-4 pt-2">
                 <div>
-                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 0.15rem 0' }}>Total Cash In</p>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#10b981', margin: 0 }}>
+                  <p className="text-xs text-neutral-400 m-0 mb-1">Total Cash In</p>
+                  <p className="text-sm font-bold text-emerald-400 m-0">
                     <AnimatedCounter value={totalCashIn} />
                   </p>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 0.15rem 0' }}>Total Cash Out</p>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#ef4444', margin: 0 }}>
+                <div className="text-right">
+                  <p className="text-xs text-neutral-400 m-0 mb-1">Total Cash Out</p>
+                  <p className="text-sm font-bold text-rose-500 m-0">
                     <AnimatedCounter value={totalCashOut} />
                   </p>
                 </div>
@@ -1709,28 +1009,19 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: t.text }}>Spending Overview</h3>
-              <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: '0 0 1rem 0' }}>Spending by Category</p>
+              <h3 className="text-lg font-bold m-0 mb-1 text-white">Spending Overview</h3>
+              <p className="text-xs text-neutral-400 m-0 mb-4">Spending by Category</p>
 
-              <div style={{
-                backgroundColor: t.cardBg,
-                border: `1px solid ${t.border}`,
-                borderRadius: '1.25rem',
-                padding: '1.25rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-                boxShadow: t.shadow
-              }}>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 flex flex-col gap-3 shadow-xl">
                 {Object.keys(categorySpending).length > 0 ? (
                   Object.entries(categorySpending).map(([cat, amt]) => (
-                    <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, paddingBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.9rem', color: t.text, fontWeight: '600' }}>{cat}</span>
-                      <span style={{ fontSize: '0.9rem', color: '#ef4444', fontWeight: 'bold' }}>₹{amt}</span>
+                    <div key={cat} className="flex justify-between items-center border-b border-neutral-800/80 pb-2.5 last:border-none">
+                      <span className="text-sm text-white font-semibold">{cat}</span>
+                      <span className="text-sm text-rose-500 font-bold">₹{amt}</span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ fontSize: '0.8rem', color: t.textMuted, textAlign: 'center', margin: 0 }}>
+                  <p className="text-xs text-neutral-500 text-center m-0 py-2">
                     Add cash-out spending records to view category breakdown.
                   </p>
                 )}
@@ -1740,34 +1031,13 @@ export default function Dashboard({ user, onLogout }) {
         )}
 
         {activeTab === 'collection' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.025em', color: t.text }}>Collections & Vaults</h2>
+          <div className="flex flex-col gap-5">
+            <h2 className="text-2xl font-extrabold m-0 tracking-tight text-white">Collections & Vaults</h2>
 
-            <div style={{
-              position: 'relative',
-              display: 'flex',
-              backgroundColor: t.cardBg,
-              border: `1px solid ${t.border}`,
-              borderRadius: '2rem',
-              padding: '4px',
-              alignItems: 'center'
-            }}>
+            <div className="relative flex bg-neutral-900 border border-neutral-800 rounded-full p-1 items-center">
               <div
-                style={{
-                  position: 'absolute',
-                  top: '4px',
-                  bottom: '4px',
-                  left: '4px',
-                  width: 'calc((100% - 8px) / 3)',
-                  transform: `translateX(${activeCollectionIndex * 100}%)`,
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                  border: `1px solid ${isDark ? '#374151' : '#cbd5e1'}`,
-                  borderRadius: '1.75rem',
-                  transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 8px rgba(0,0,0,0.08)'
-                }}
+                style={{ transform: `translateX(${activeCollectionIndex * 100}%)` }}
+                className="absolute top-1 bottom-1 left-1 w-[calc((100%-8px)/3)] bg-white/10 border border-neutral-700 rounded-full transition-transform duration-300 pointer-events-none z-10"
               />
 
               {collectionTabs.map((tab) => {
@@ -1776,27 +1046,9 @@ export default function Dashboard({ user, onLogout }) {
                   <button
                     key={tab}
                     onClick={() => setCollectionSubTab(tab)}
-                    style={{
-                      position: 'relative',
-                      zIndex: 2,
-                      flex: 1,
-                      backgroundColor: 'transparent',
-                      color: isActive ? t.text : t.textSecondary,
-                      border: 'none',
-                      borderRadius: '1.75rem',
-                      padding: '0.65rem 0.2rem',
-                      fontWeight: isActive ? '700' : '600',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      transition: 'color 0.25s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.3rem',
-                      userSelect: 'none'
-                    }}
+                    className={`relative z-20 flex-1 bg-transparent border-none rounded-full py-2.5 text-xs font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-colors ${isActive ? 'text-white font-bold' : 'text-neutral-400'}`}
                   >
-                    {isActive && <Check size={14} color="#3b82f6" />}
+                    {isActive && <Check size={14} className="text-blue-500" />}
                     {tab}
                   </button>
                 );
@@ -1804,54 +1056,32 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             {collectionSubTab === 'All' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="flex flex-col gap-4">
                 {[...prebuiltCategories, ...ownedCollections.map(item => ({ 
                   title: item.name, 
-                  icon: <Box size={18} color={item.color || "#3b82f6"} />, 
-                  color: 'transparent',
-                  borderColor: 'transparent'
+                  icon: <Box size={18} style={{ color: item.color || "#3b82f6" }} /> 
                 }))].map((item, index) => {
                   const catName = item.name || item.title;
                   const catData = categorySummary[catName] || { cashIn: 0, cashOut: 0, count: 0 };
                   const netCatBalance = catData.cashIn - catData.cashOut;
                   return (
-                    <div key={index} style={{
-                      backgroundColor: t.cardBg,
-                      border: `1px solid ${t.border}`,
-                      borderRadius: '1.25rem',
-                      padding: '1.25rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      boxShadow: t.shadow
-                    }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '0.875rem',
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
+                    <div key={index} className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 flex justify-between items-start shadow-xl">
+                      <div className="flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-black border border-neutral-800 flex items-center justify-center">
                           {item.icon}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: t.text }}>{catName}</h4>
-                          <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
-                            {catData.count} records
-                          </p>
+                          <h4 className="text-base font-bold m-0 mb-0.5 text-white">{catName}</h4>
+                          <p className="text-xs text-neutral-400 m-0">{catData.count} records</p>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div className="flex gap-4">
                           <div>
-                            <p style={{ fontSize: '0.65rem', color: '#10b981', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
-                            <p style={{ fontSize: '0.65rem', color: '#ef4444', margin: 0 }}>Out: ₹{catData.cashOut}</p>
+                            <p className="text-[11px] text-emerald-400 m-0 mb-0.5">In: ₹{catData.cashIn}</p>
+                            <p className="text-[11px] text-rose-500 m-0">Out: ₹{catData.cashOut}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: '0 0 0.1rem 0' }}>Remaining</p>
-                            <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                            <p className="text-[11px] text-neutral-400 m-0 mb-0.5">Remaining</p>
+                            <p className={`text-sm font-bold m-0 ${netCatBalance >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                               <AnimatedCounter value={netCatBalance} />
                             </p>
                           </div>
@@ -1862,7 +1092,7 @@ export default function Dashboard({ user, onLogout }) {
                           setEditingCollectionName(catName);
                           setShowEditCollectionPage(true);
                         }}
-                        style={{ backgroundColor: 'transparent', border: 'none', color: t.textSecondary, cursor: 'pointer', padding: '4px' }}
+                        className="bg-transparent border-none text-neutral-400 hover:text-white cursor-pointer p-1"
                       >
                         <Edit3 size={17} />
                       </button>
@@ -1873,48 +1103,28 @@ export default function Dashboard({ user, onLogout }) {
             )}
 
             {collectionSubTab === 'Prebuild' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="flex flex-col gap-4">
                 {prebuiltCategories.map((item, index) => {
                   const catData = categorySummary[item.name] || { cashIn: 0, cashOut: 0, count: 0 };
                   const netCatBalance = catData.cashIn - catData.cashOut;
                   return (
-                    <div key={index} style={{
-                      backgroundColor: t.cardBg,
-                      border: `1px solid ${t.border}`,
-                      borderRadius: '1.25rem',
-                      padding: '1.25rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      boxShadow: t.shadow
-                    }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '0.875rem',
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
+                    <div key={index} className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 flex justify-between items-start shadow-xl">
+                      <div className="flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-black border border-neutral-800 flex items-center justify-center">
                           {item.icon}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: t.text }}>{item.name}</h4>
-                          <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
-                            {catData.count} records
-                          </p>
+                          <h4 className="text-base font-bold m-0 mb-0.5 text-white">{item.name}</h4>
+                          <p className="text-xs text-neutral-400 m-0">{catData.count} records</p>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div className="flex gap-4">
                           <div>
-                            <p style={{ fontSize: '0.65rem', color: '#10b981', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
-                            <p style={{ fontSize: '0.65rem', color: '#ef4444', margin: 0 }}>Out: ₹{catData.cashOut}</p>
+                            <p className="text-[11px] text-emerald-400 m-0 mb-0.5">In: ₹{catData.cashIn}</p>
+                            <p className="text-[11px] text-rose-500 m-0">Out: ₹{catData.cashOut}</p>
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: '0 0 0.1rem 0' }}>Remaining</p>
-                            <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                            <p className="text-[11px] text-neutral-400 m-0 mb-0.5">Remaining</p>
+                            <p className={`text-sm font-bold m-0 ${netCatBalance >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                               <AnimatedCounter value={netCatBalance} />
                             </p>
                           </div>
@@ -1925,7 +1135,7 @@ export default function Dashboard({ user, onLogout }) {
                           setEditingCollectionName(item.name);
                           setShowEditCollectionPage(true);
                         }}
-                        style={{ backgroundColor: 'transparent', border: 'none', color: t.textSecondary, cursor: 'pointer', padding: '4px' }}
+                        className="bg-transparent border-none text-neutral-400 hover:text-white cursor-pointer p-1"
                       >
                         <Edit3 size={17} />
                       </button>
@@ -1937,48 +1147,28 @@ export default function Dashboard({ user, onLogout }) {
 
             {collectionSubTab === 'Owned' && (
               ownedCollections.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="flex flex-col gap-4">
                   {ownedCollections.map((item, index) => {
                     const catData = categorySummary[item.name] || { cashIn: 0, cashOut: 0, count: 0 };
                     const netCatBalance = catData.cashIn - catData.cashOut;
                     return (
-                      <div key={index} style={{
-                        backgroundColor: t.cardBg,
-                        border: `1px solid ${t.border}`,
-                        borderRadius: '1.25rem',
-                        padding: '1.25rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        boxShadow: t.shadow
-                      }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                          <div style={{
-                            width: '42px',
-                            height: '42px',
-                            borderRadius: '0.875rem',
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
-                            <Box size={18} color={item.color || "#3b82f6"} />
+                      <div key={index} className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 flex justify-between items-start shadow-xl">
+                        <div className="flex flex-col gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-black border border-neutral-800 flex items-center justify-center">
+                            <Box size={18} style={{ color: item.color || "#3b82f6" }} />
                           </div>
                           <div>
-                            <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: t.text }}>{item.name}</h4>
-                            <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
-                              {catData.count} records
-                            </p>
+                            <h4 className="text-base font-bold m-0 mb-0.5 text-white">{item.name}</h4>
+                            <p className="text-xs text-neutral-400 m-0">{catData.count} records</p>
                           </div>
-                          <div style={{ display: 'flex', gap: '1rem' }}>
+                          <div className="flex gap-4">
                             <div>
-                              <p style={{ fontSize: '0.65rem', color: '#10b981', margin: '0 0 0.1rem 0' }}>In: ₹{catData.cashIn}</p>
-                              <p style={{ fontSize: '0.65rem', color: '#ef4444', margin: 0 }}>Out: ₹{catData.cashOut}</p>
+                              <p className="text-[11px] text-emerald-400 m-0 mb-0.5">In: ₹{catData.cashIn}</p>
+                              <p className="text-[11px] text-rose-500 m-0">Out: ₹{catData.cashOut}</p>
                             </div>
                             <div>
-                              <p style={{ fontSize: '0.7rem', color: t.textSecondary, margin: '0 0 0.1rem 0' }}>Remaining</p>
-                              <p style={{ fontSize: '0.95rem', fontWeight: 'bold', color: netCatBalance >= 0 ? '#10b981' : '#ef4444', margin: 0 }}>
+                              <p className="text-[11px] text-neutral-400 m-0 mb-0.5">Remaining</p>
+                              <p className={`text-sm font-bold m-0 ${netCatBalance >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                                 <AnimatedCounter value={netCatBalance} />
                               </p>
                             </div>
@@ -1989,7 +1179,7 @@ export default function Dashboard({ user, onLogout }) {
                             setEditingCollectionName(item.name);
                             setShowEditCollectionPage(true);
                           }}
-                          style={{ backgroundColor: 'transparent', border: 'none', color: t.textSecondary, cursor: 'pointer', padding: '4px' }}
+                          className="bg-transparent border-none text-neutral-400 hover:text-white cursor-pointer p-1"
                         >
                           <Edit3 size={17} />
                         </button>
@@ -1998,20 +1188,10 @@ export default function Dashboard({ user, onLogout }) {
                   })}
                 </div>
               ) : (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '4rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexGrow: 1
-                }}>
-                  <div style={{ marginBottom: '1rem', color: t.text }}>
-                    <Ghost size={64} strokeWidth={1.5} />
-                  </div>
-                  <p style={{ color: t.text, fontWeight: '600', fontSize: '1rem', margin: '0.25rem 0' }}>No Custom Collections</p>
-                  <p style={{ fontSize: '0.75rem', color: t.textMuted, maxWidth: '240px', lineHeight: '1.4', margin: 0 }}>
+                <div className="text-center py-16 flex flex-col items-center justify-center flex-grow">
+                  <Ghost size={64} strokeWidth={1.5} className="text-neutral-600 mb-3" />
+                  <p className="text-white font-semibold text-base m-0 mb-1">No Custom Collections</p>
+                  <p className="text-xs text-neutral-500 max-w-[240px] leading-relaxed m-0">
                     Create custom collections with categories to analyze your spending efficiently.
                   </p>
                 </div>
@@ -2022,442 +1202,61 @@ export default function Dashboard({ user, onLogout }) {
 
       </div>
 
-      <div style={{
-        position: 'fixed',
-        bottom: '5.2rem',
-        right: '1.5rem',
-        zIndex: 999
-      }}>
+      {/* Rohix AI Assistant Floating Button with Robot Icon placed above Home tab */}
+      <div className="fixed bottom-22 right-5 z-40">
         <button 
           onClick={() => setShowAiChat(true)}
-          style={{
-            backgroundColor: '#2563eb',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '50%',
-            width: '48px',
-            height: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)',
-            transition: 'transform 0.2s ease'
-          }}
+          className="bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-700 rounded-full py-2.5 px-4 flex items-center gap-2 cursor-pointer shadow-2xl transition-transform active:scale-95 backdrop-blur-md"
           title="Rohix AI Assistant"
         >
-          <Sparkles size={22} />
+          <Bot size={18} className="text-blue-400 animate-bounce" />
+          <span className="text-xs font-bold tracking-wide">Rohix AI</span>
         </button>
       </div>
 
-      <div style={{
-        position: 'fixed',
-        bottom: '1.25rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '90%',
-        maxWidth: '380px',
-        backgroundColor: t.bottomNavBg,
-        border: `1px solid ${t.bottomNavBorder}`,
-        borderRadius: '2.5rem',
-        padding: '0.35rem 0.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        boxShadow: t.bottomNavShadow,
-        zIndex: 10,
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)'
-      }}>
-        <div style={{
-          position: 'relative',
-          display: 'flex',
-          flex: 1,
-          backgroundColor: t.pillContainer,
-          borderRadius: '2rem',
-          padding: '3px',
-          marginRight: '0.5rem',
-          border: `1px solid ${t.border}`,
-          alignItems: 'center'
-        }}>
-          <div
-            style={{
-              position: 'absolute',
-              top: '3px',
-              bottom: '3px',
-              left: '3px',
-              width: 'calc((100% - 6px) / 3)',
-              transform: `translateX(${activeTabIndex * 100}%)`,
-              backgroundColor: t.pillActive,
-              border: `1px solid ${t.pillBorder}`,
-              borderRadius: '1.75rem',
-              transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-              pointerEvents: 'none',
-              zIndex: 1,
-              boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.08)'
-            }}
-          />
-
-          {tabList.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const IconComponent = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabSwitch(tab.id)}
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.35rem',
-                  padding: '0.55rem 0.2rem',
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '1.75rem',
-                  color: isActive ? t.text : t.textSecondary,
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  fontWeight: isActive ? '700' : '500',
-                  transition: 'color 0.25s ease, transform 0.15s ease',
-                  WebkitTapHighlightColor: 'transparent',
-                  outline: 'none',
-                  userSelect: 'none'
-                }}
-                className="nav-tab-btn"
-              >
-                <IconComponent size={17} color={isActive ? t.text : t.textSecondary} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <button 
-          onClick={() => setShowAddEntryModal(true)}
-          style={{
-            backgroundColor: t.actionBtnBg,
-            color: t.actionBtnColor,
-            border: 'none',
-            borderRadius: '50%',
-            width: '42px',
-            height: '42px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: isDark ? '0 4px 14px rgba(255,255,255,0.25)' : '0 4px 14px rgba(0,0,0,0.25)',
-            flexShrink: 0,
-            transition: 'transform 0.15s ease',
-            WebkitTapHighlightColor: 'transparent',
-            outline: 'none'
-          }}
-          className="plus-action-btn"
-        >
-          <Plus size={22} strokeWidth={2.5} />
-        </button>
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-neutral-900 border border-neutral-800 rounded-full p-2 flex items-center justify-between shadow-2xl z-30 backdrop-blur-md">
+        {tabList.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const IconComponent = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabSwitch(tab.id)}
+              className={`relative z-20 flex-1 flex flex-col items-center justify-center gap-1 py-1.5 px-2 bg-transparent border-none rounded-full cursor-pointer text-xs transition-all ${isActive ? 'bg-black text-white font-bold shadow-md border border-neutral-800' : 'text-neutral-400 hover:text-white'}`}
+            >
+              <IconComponent size={18} className={isActive ? 'text-white' : 'text-neutral-400'} />
+              <span className="text-[10px]">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {showAddEntryModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: t.bg,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '2rem 1.25rem 2.5rem 1.25rem',
-          boxSizing: 'border-box',
-          zIndex: 100,
-          overflowY: 'auto'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', maxWidth: '380px' }}>
-            <button 
-              onClick={() => setShowAddEntryModal(false)}
-              style={{
-                backgroundColor: t.secondaryCardBg,
-                border: `1px solid ${t.borderSecondary}`,
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: t.text
-              }}
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <div style={{
-            width: '100%',
-            maxWidth: '380px',
-            margin: 'auto 0',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            padding: '1rem 0'
-          }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              backgroundColor: t.actionBtnBg,
-              color: t.actionBtnColor,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1.25rem',
-              boxShadow: isDark ? '0 0 25px rgba(255,255,255,0.25)' : '0 0 25px rgba(0,0,0,0.15)'
-            }}>
-              <Plus size={36} strokeWidth={2.5} />
-            </div>
-
-            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: t.text, margin: '0 0 0.5rem 0' }}>Add New Entry</h3>
-            <p style={{ fontSize: '0.85rem', color: t.textSecondary, maxWidth: '280px', margin: '0 0 2rem 0', lineHeight: '1.4' }}>
-              Create a new collection or add a spending entry.
-            </p>
-
-            <div style={{
-              width: '100%',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '0.85rem',
-              marginBottom: '1rem'
-            }}>
-              <div 
-                onClick={() => {
-                  setShowAddEntryModal(false);
-                  setShowAddRecordPage(true);
-                }}
-                style={{
-                  backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: '1.25rem',
-                  padding: '1.25rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  minHeight: '130px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  boxShadow: t.shadow
-                }}
-              >
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '0.875rem',
-                  backgroundColor: 'rgba(16, 185, 129, 0.16)',
-                  border: '1px solid rgba(16, 185, 129, 0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Receipt size={20} color="#10b981" />
-                </div>
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: t.text, margin: '0 0 0.2rem 0' }}>Spending Record</h4>
-                  <p style={{ fontSize: '0.68rem', color: t.textSecondary, margin: 0, lineHeight: '1.2' }}>Add incoming or outgoing</p>
-                </div>
-              </div>
-
-              <div 
-                onClick={() => {
-                  setShowAddEntryModal(false);
-                  setShowEditCollectionPage(true);
-                }}
-                style={{
-                  backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: '1.25rem',
-                  padding: '1.25rem 1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  minHeight: '130px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  boxShadow: t.shadow
-                }}
-              >
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '0.875rem',
-                  backgroundColor: 'rgba(244, 63, 94, 0.16)',
-                  border: '1px solid rgba(244, 63, 94, 0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Folder size={20} color="#f43f5e" />
-                </div>
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: t.text, margin: '0 0 0.2rem 0' }}>Collection Category</h4>
-                  <p style={{ fontSize: '0.68rem', color: t.textSecondary, margin: 0, lineHeight: '1.2' }}>Organize into custom groups</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ width: '100%', maxWidth: '380px' }}>
-            <button 
-              onClick={() => setShowAddEntryModal(false)}
-              style={{
-                width: '100%',
-                backgroundColor: t.cardBg,
-                color: t.text,
-                fontWeight: '600',
-                padding: '0.9rem 1rem',
-                borderRadius: '2.5rem',
-                border: `1px solid ${t.border}`,
-                cursor: 'pointer',
-                fontSize: '0.95rem'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Profile & Settings Modal */}
       {showSettingsModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: '0',
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(0, 0, 0, 0.45)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          zIndex: 100
-        }}
-        onClick={() => setShowSettingsModal(false)}
+        <div 
+          onClick={() => setShowSettingsModal(false)}
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm flex flex-col justify-end z-50"
         >
           <div 
-            className="bottom-sheet-anim"
-            style={{
-              backgroundColor: t.secondaryCardBg,
-              borderTopLeftRadius: '2rem',
-              borderTopRightRadius: '2rem',
-              padding: '1.5rem 1.25rem 2.5rem 1.25rem',
-              width: '100%',
-              maxWidth: '380px',
-              marginInline: 'auto',
-              boxSizing: 'border-box',
-              boxShadow: isDark ? '0 -10px 30px rgba(0,0,0,0.8)' : '0 -10px 30px rgba(0,0,0,0.15)',
-              borderTop: `1px solid ${t.borderSecondary}`
-            }}
             onClick={(e) => e.stopPropagation()}
+            className="bg-neutral-900 border-t border-neutral-800 rounded-t-3xl p-6 w-full max-w-[380px] mx-auto box-border shadow-2xl animate-slideUp"
           >
-            <div style={{
-              width: '40px',
-              height: '4px',
-              backgroundColor: t.borderSecondary,
-              borderRadius: '2px',
-              margin: '0 auto 1.25rem auto'
-            }}></div>
+            <div className="w-10 h-1 bg-neutral-700 rounded-full mx-auto mb-5"></div>
 
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: t.text, margin: '0 0 1.25rem 0' }}>Settings</h2>
+            <h2 className="text-xl font-bold text-white m-0 mb-5">Profile & Settings</h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              
-              <div 
-                onClick={toggleTheme}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '1rem',
-                  backgroundColor: t.cardBg,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '0.75rem',
-                    backgroundColor: isDark ? 'rgba(250, 204, 21, 0.15)' : 'rgba(79, 70, 229, 0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: isDark ? '#facc15' : '#4f46e5'
-                  }}>
-                    {isDark ? <Sun size={20} /> : <Moon size={20} />}
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: t.text, margin: '0 0 0.15rem 0' }}>
-                      Switch Theme
-                    </h4>
-                    <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>
-                      Current: <strong style={{ color: isDark ? '#facc15' : '#4f46e5' }}>{isDark ? 'Dark Mode' : 'Light Mode'}</strong>
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '1rem',
-                  backgroundColor: isDark ? '#1f2937' : '#e2e8f0',
-                  color: t.text,
-                  fontSize: '0.75rem',
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  {isDark ? <Moon size={14} /> : <Sun size={14} />} {isDark ? 'Dark' : 'Light'}
-                </div>
-              </div>
-
+            <div className="flex flex-col gap-3">
               <div 
                 onClick={onLogout}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '1rem',
-                  backgroundColor: t.cardBg,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
+                className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-black border border-neutral-800/80 cursor-pointer"
               >
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '0.75rem',
-                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#3b82f6'
-                }}>
+                <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400">
                   <LogOut size={20} />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: t.text, margin: '0 0 0.15rem 0' }}>Sign Out</h4>
-                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Safely close current finance database session</p>
+                  <h4 className="text-sm font-semibold text-white m-0 mb-0.5">Sign Out</h4>
+                  <p className="text-xs text-neutral-400 m-0">Safely close current session</p>
                 </div>
               </div>
 
@@ -2466,119 +1265,32 @@ export default function Dashboard({ user, onLogout }) {
                   setShowSettingsModal(false);
                   setShowDeleteConfirmModal(true);
                 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '1rem',
-                  backgroundColor: t.cardBg,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
+                className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-black border border-neutral-800/80 cursor-pointer"
               >
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '0.75rem',
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ef4444'
-                }}>
+                <div className="w-9 h-9 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-500">
                   <Trash2 size={20} />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#ef4444', margin: '0 0 0.15rem 0' }}>Delete Account</h4>
-                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Permanently erase all your data and collections</p>
+                  <h4 className="text-sm font-semibold text-rose-500 m-0 mb-0.5">Delete Account</h4>
+                  <p className="text-xs text-neutral-400 m-0">Permanently erase all data</p>
                 </div>
               </div>
-
-              <div 
-                onClick={() => {
-                  setShowSettingsModal(false);
-                  setShowDeveloperPage(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '1rem',
-                  backgroundColor: t.cardBg,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '0.75rem',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#10b981'
-                }}>
-                  <Code size={20} />
-                </div>
-                <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: t.text, margin: '0 0 0.15rem 0' }}>About Developer</h4>
-                  <p style={{ fontSize: '0.75rem', color: t.textSecondary, margin: 0 }}>Meet Nikhil Gupta & explore portfolio</p>
-                </div>
-              </div>
-
             </div>
-
           </div>
         </div>
       )}
 
       {showDeleteConfirmModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1rem'
-        }}>
-          <div style={{
-            backgroundColor: t.cardBg,
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            borderRadius: '20px',
-            padding: '24px',
-            width: '100%',
-            maxWidth: '320px',
-            textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(239, 68, 68, 0.15)'
-          }}>
-            <div style={{ color: '#ef4444', fontSize: '1.25rem', fontWeight: '700', marginBottom: '10px', letterSpacing: '-0.02em' }}>
-              Delete Account?
-            </div>
-            <p style={{ color: t.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', marginBottom: '20px' }}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border border-rose-500/40 rounded-3xl p-6 w-full max-w-[320px] text-center shadow-2xl">
+            <div className="text-rose-500 text-lg font-bold mb-2">Delete Account?</div>
+            <p className="text-neutral-400 text-xs leading-relaxed mb-5">
               Are you sure you want to permanently delete your account and all financial records? This action cannot be undone.
             </p>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="flex gap-3">
               <button 
                 onClick={() => setShowDeleteConfirmModal(false)}
-                style={{
-                  flex: 1,
-                  background: t.secondaryCardBg,
-                  color: t.text,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: '9999px',
-                  padding: '10px',
-                  fontWeight: '600',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer'
-                }}
+                className="flex-1 bg-black text-white border border-neutral-800 rounded-full py-2.5 font-semibold text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -2587,18 +1299,7 @@ export default function Dashboard({ user, onLogout }) {
                   setShowDeleteConfirmModal(false);
                   handleDeleteAccount();
                 }}
-                style={{
-                  flex: 1,
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '9999px',
-                  padding: '10px',
-                  fontWeight: '600',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)'
-                }}
+                className="flex-1 bg-gradient-to-r from-rose-500 to-red-600 text-white border-none rounded-full py-2.5 font-semibold text-xs cursor-pointer shadow-lg"
               >
                 Delete
               </button>
